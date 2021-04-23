@@ -52,4 +52,12 @@ model probe {
 model config {
   key   String @id
   value String
-} 
+}
+
+model monika {
+  id                  Int     @id @default(autoincrement())
+  config              String
+  version             String  @unique
+  monika_id           String
+  monika_ip_address   String
+}

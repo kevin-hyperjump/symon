@@ -17,40 +17,38 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
+import { NextFunction, Request, Response } from "express";
 
-import auth from "./services/auth";
-import authMiddleware from "./services/auth/middleware";
-import locations from "./services/locations";
-import monika from "./services/monika";
-import organizations from "./services/organizations";
-import probes from "./services/probes";
-import projects from "./services/projects";
-import users from "./services/users";
+import { AppError, commonHTTPErrors } from "../../internal/app-error";
+import { MonikaRepository } from "./repository";
 
-const router = express.Router();
+const repository = new MonikaRepository();
 
-router.get("/", (_, res) => {
-  res.send("Hello World!");
-});
+export async function createHandshake(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const { data: configData, monika } = req.body;
 
-router.use(auth);
+  try {
+    const data = await repository.createHandshake({
+      monika,
+      config: configData,
+    });
 
-router.use(authMiddleware);
+    res.status(201).send({
+      result: "SUCCESS",
+      message: "Successfully create handshake",
+      data,
+    });
+  } catch (err) {
+    const error = new AppError(
+      commonHTTPErrors.unprocessableEntity,
+      err.message,
+      true,
+    );
 
-// ********************************
-// Protected Endpoints ************
-// ********************************
-
-router.use(users);
-router.use(organizations);
-router.use(locations);
-router.use(probes);
-router.use(projects);
-router.use(monika);
-
-// ********************************
-// End of Protected Endpoints *****
-// ********************************
-
-export default router;
+    next(error);
+  }
+}

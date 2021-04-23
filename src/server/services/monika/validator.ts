@@ -17,40 +17,23 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
+import Joi from "joi";
 
-import auth from "./services/auth";
-import authMiddleware from "./services/auth/middleware";
-import locations from "./services/locations";
-import monika from "./services/monika";
-import organizations from "./services/organizations";
-import probes from "./services/probes";
-import projects from "./services/projects";
-import users from "./services/users";
-
-const router = express.Router();
-
-router.get("/", (_, res) => {
-  res.send("Hello World!");
+const handshakeMonikaSchemaValidator = Joi.object().keys({
+  id: Joi.string(),
+  ip_address: Joi.string(),
 });
 
-router.use(auth);
+const handshakeDataSchemaValidator = Joi.object().keys({
+  notifications: Joi.array(),
+  probes: Joi.array(),
+});
 
-router.use(authMiddleware);
+const handshakeSchemaValidator = Joi.object().keys({
+  monika: handshakeMonikaSchemaValidator,
+  data: handshakeDataSchemaValidator,
+});
 
-// ********************************
-// Protected Endpoints ************
-// ********************************
+export const createHandshakeSchemaValidator = handshakeSchemaValidator;
 
-router.use(users);
-router.use(organizations);
-router.use(locations);
-router.use(probes);
-router.use(projects);
-router.use(monika);
-
-// ********************************
-// End of Protected Endpoints *****
-// ********************************
-
-export default router;
+export const updateHandshakeSchemaValidator = handshakeSchemaValidator;

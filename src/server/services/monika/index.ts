@@ -19,38 +19,16 @@
 
 import express from "express";
 
-import auth from "./services/auth";
-import authMiddleware from "./services/auth/middleware";
-import locations from "./services/locations";
-import monika from "./services/monika";
-import organizations from "./services/organizations";
-import probes from "./services/probes";
-import projects from "./services/projects";
-import users from "./services/users";
+import validate from "../../internal/middleware/validator";
+import { createHandshake } from "./controller";
+import { createHandshakeSchemaValidator } from "./validator";
 
 const router = express.Router();
 
-router.get("/", (_, res) => {
-  res.send("Hello World!");
-});
-
-router.use(auth);
-
-router.use(authMiddleware);
-
-// ********************************
-// Protected Endpoints ************
-// ********************************
-
-router.use(users);
-router.use(organizations);
-router.use(locations);
-router.use(probes);
-router.use(projects);
-router.use(monika);
-
-// ********************************
-// End of Protected Endpoints *****
-// ********************************
+router.post(
+  "/v1/monika/handshake",
+  validate(createHandshakeSchemaValidator),
+  createHandshake,
+);
 
 export default router;

@@ -17,40 +17,27 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
+import { v4 as uuid } from "uuid";
 
-import auth from "./services/auth";
-import authMiddleware from "./services/auth/middleware";
-import locations from "./services/locations";
-import monika from "./services/monika";
-import organizations from "./services/organizations";
-import probes from "./services/probes";
-import projects from "./services/projects";
-import users from "./services/users";
+import Prisma from "../../prisma/prisma-client";
+import { MonikaHandshakeCreate } from "./entity";
 
-const router = express.Router();
+export class MonikaRepository {
+  async createHandshake({
+    config,
+    ...res
+  }: MonikaHandshakeCreate): Promise<{ version: string }> {
+    const data = await Prisma.monika.create({
+      data: {
+        version: uuid(),
+        config: JSON.stringify(config),
+        monika_id: res.monika.id,
+        monika_ip_address: res.monika.ip_address,
+      },
+    });
 
-router.get("/", (_, res) => {
-  res.send("Hello World!");
-});
-
-router.use(auth);
-
-router.use(authMiddleware);
-
-// ********************************
-// Protected Endpoints ************
-// ********************************
-
-router.use(users);
-router.use(organizations);
-router.use(locations);
-router.use(probes);
-router.use(projects);
-router.use(monika);
-
-// ********************************
-// End of Protected Endpoints *****
-// ********************************
-
-export default router;
+    return {
+      version: data.version,
+    };
+  }
+}

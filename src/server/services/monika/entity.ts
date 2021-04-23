@@ -17,40 +17,26 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
+import { Notification } from "@hyperjumptech/monika/lib/interfaces/notification";
+import { Probe } from "@hyperjumptech/monika/lib/interfaces/probe";
 
-import auth from "./services/auth";
-import authMiddleware from "./services/auth/middleware";
-import locations from "./services/locations";
-import monika from "./services/monika";
-import organizations from "./services/organizations";
-import probes from "./services/probes";
-import projects from "./services/projects";
-import users from "./services/users";
+interface MonikaData {
+  id: string;
+  ip_address: string;
+}
 
-const router = express.Router();
+interface ConfigData {
+  notifications: Notification[];
+  probes: Probe[];
+}
 
-router.get("/", (_, res) => {
-  res.send("Hello World!");
-});
+export interface MonikaHandshake {
+  id: number;
+  version: string;
+  monika: MonikaData;
+  config: ConfigData;
+}
 
-router.use(auth);
+export type MonikaHandshakeCreate = Omit<MonikaHandshake, "id" | "version">;
 
-router.use(authMiddleware);
-
-// ********************************
-// Protected Endpoints ************
-// ********************************
-
-router.use(users);
-router.use(organizations);
-router.use(locations);
-router.use(probes);
-router.use(projects);
-router.use(monika);
-
-// ********************************
-// End of Protected Endpoints *****
-// ********************************
-
-export default router;
+export type MonikaHandshakeUpdate = Omit<MonikaHandshake, "id" | "version">;

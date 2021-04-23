@@ -38,6 +38,7 @@
   },
   "homepage": "https://github.com/hyperjumptech/symon#readme",
   "dependencies": {
+    "@hyperjumptech/monika": "^1.3.1",
     "@prisma/client": "2.15.0",
     "argon2": "^0.27.1",
     "body-parser": "1.19.0",
