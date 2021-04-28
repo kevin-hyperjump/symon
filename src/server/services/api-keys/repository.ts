@@ -40,6 +40,16 @@ export class Repository {
     return result;
   }
 
+  async findByApiKey(apiKey: string): Promise<APIKey | null> {
+    const result = await Prisma.apiKey.findUnique({
+      where: {
+        apiKey,
+      },
+    });
+
+    return result;
+  }
+
   async create(data: APIKeyCreate): Promise<APIKey> {
     const result = await Prisma.apiKey.create({
       data: {

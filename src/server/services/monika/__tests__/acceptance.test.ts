@@ -23,6 +23,7 @@ import faker from "faker";
 import request from "supertest";
 
 import errorHandler from "../../../internal/middleware/error-handler";
+import { Repository as ApiKeyRepository } from "../../api-keys/repository";
 import { MonikaHandshake, MonikaHandshakeCreate } from "../entity";
 import organization from "../index";
 import { MonikaRepository } from "../repository";
@@ -72,6 +73,7 @@ describe("MonikaHandshake Service", () => {
 
   beforeEach(function () {
     jest.mock("../repository");
+    jest.mock("../../api-keys/repository");
 
     MonikaRepository.prototype.createHandshake = async (
       input: MonikaHandshakeCreate,
@@ -86,12 +88,28 @@ describe("MonikaHandshake Service", () => {
 
       return createdHandshake;
     };
+
+    ApiKeyRepository.prototype.findByApiKey = async () => {
+      const data = {
+        id: 1,
+        projectID: 1,
+        apiKey: "123",
+        isEnabled: true,
+        createdBy: "1",
+        updatedBy: "1",
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
+      };
+
+      return data;
+    };
   });
 
   describe("POST /v1/monika/handshake", () => {
     it("should return http status code 201", async done => {
       const res = await request(app)
         .post("/v1/monika/handshake")
+        .set({ "x-api-key": "123" })
         .send({
           monika: {
             id: faker.random.uuid(),
@@ -127,6 +145,7 @@ describe("MonikaHandshake Service", () => {
 
       const res = await request(app)
         .post("/v1/monika/handshake")
+        .set({ "x-api-key": "123" })
         .send({
           monika: {
             ip_address: faker.internet.ip(),

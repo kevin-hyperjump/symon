@@ -36,6 +36,7 @@ router.get("/", (_, res) => {
 });
 
 router.use(auth);
+router.use(monika);
 
 router.use(authMiddleware);
 
@@ -49,7 +50,6 @@ router.use(locations);
 router.use(probes);
 router.use(projects);
 router.use(apiKeys);
-router.use(monika);
 
 // ********************************
 // End of Protected Endpoints *****

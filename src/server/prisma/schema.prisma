@@ -58,7 +58,7 @@ model config {
 model apiKey {
   id        Int     @id @default(autoincrement())
   projectID Int
-  apiKey    String
+  apiKey    String  @unique
   isEnabled Boolean @default(true)
   createdAt Int
   updatedAt Int

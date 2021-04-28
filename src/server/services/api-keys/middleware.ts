@@ -17,32 +17,38 @@
  *                                                                                *
  **********************************************************************************/
 
-export enum commonHTTPErrors {
-  badRequest = 400,
-  notFound = 404,
-  unprocessableEntity = 422,
-  notAuthenticated = 401,
-  forbidden = 403,
-  conflict = 409,
-}
+import { NextFunction, Request, Response } from "express";
 
-export class AppError extends Error {
-  public readonly httpErrorCode: commonHTTPErrors;
-  public readonly isOperational: boolean;
+import { AppError, commonHTTPErrors } from "../../internal/app-error";
+import { Repository as ApiKeyRepository } from "../api-keys/repository";
 
-  constructor(
-    httpErrorCode: number,
-    description: string,
-    isOperational: boolean,
-  ) {
-    super(description);
+const repository = new ApiKeyRepository();
 
-    // restore prototype chain
-    Object.setPrototypeOf(this, new.target.prototype);
+const apiKeyMiddleware = async (
+  req: Request,
+  _: Response,
+  next: NextFunction,
+): Promise<void> => {
+  const apiKey = (req.headers["x-api-key"] ?? "") as string;
+  const data = await repository.findByApiKey(apiKey);
 
-    this.httpErrorCode = httpErrorCode;
-    this.isOperational = isOperational;
-
-    Error.captureStackTrace(this);
+  if (!data) {
+    return next(
+      new AppError(
+        commonHTTPErrors.notAuthenticated,
+        "API Key is invalid",
+        true,
+      ),
+    );
   }
-}
+
+  if (!data?.isEnabled) {
+    return next(
+      new AppError(commonHTTPErrors.forbidden, "API Key is disabled", true),
+    );
+  }
+
+  return next();
+};
+
+export default apiKeyMiddleware;
