@@ -104,3 +104,11 @@ model reportData {
 
   report report @relation(fields: [reportId], references: [id])
 }
+
+model notification {
+  id        Int    @id @default(autoincrement())
+  type      String
+  data      String
+  createdAt Int
+  updatedAt Int
+}

@@ -17,33 +17,73 @@
  *                                                                                *
  **********************************************************************************/
 
-export enum commonHTTPErrors {
-  badRequest = 400,
-  notFound = 404,
-  unprocessableEntity = 422,
-  notAuthenticated = 401,
-  forbidden = 403,
-  conflict = 409,
-  internalServer = 500,
-}
+import { notification } from "@prisma/client";
 
-export class AppError extends Error {
-  public readonly httpErrorCode: commonHTTPErrors;
-  public readonly isOperational: boolean;
+import Prisma from "../../prisma/prisma-client";
+import { NotificationCreate, NotificationUpdate } from "./entity";
 
-  constructor(
-    httpErrorCode: number,
-    description: string,
-    isOperational: boolean,
-  ) {
-    super(description);
+export class NotificationRepository {
+  async findMany({
+    offset,
+    size,
+    order,
+  }: {
+    offset: number;
+    size: number;
+    order: "asc" | "desc";
+  }): Promise<notification[]> {
+    const data = await Prisma.notification.findMany({
+      skip: offset,
+      take: size,
+      orderBy: {
+        id: order,
+      },
+    });
 
-    // restore prototype chain
-    Object.setPrototypeOf(this, new.target.prototype);
+    return data;
+  }
 
-    this.httpErrorCode = httpErrorCode;
-    this.isOperational = isOperational;
+  async findOneByID(id: number): Promise<notification | null> {
+    const data = await Prisma.notification.findUnique({
+      where: {
+        id,
+      },
+    });
 
-    Error.captureStackTrace(this);
+    return data;
+  }
+
+  async create(res: NotificationCreate): Promise<notification> {
+    const dateNow = Math.floor(Date.now() / 1000);
+
+    const data = await Prisma.notification.create({
+      data: {
+        ...res,
+        createdAt: dateNow,
+        updatedAt: dateNow,
+      },
+    });
+
+    return data;
+  }
+
+  async update(id: number, res: NotificationUpdate): Promise<notification> {
+    const dateNow = Math.floor(Date.now() / 1000);
+
+    const data = await Prisma.notification.update({
+      where: { id },
+      data: {
+        ...res,
+        updatedAt: dateNow,
+      },
+    });
+
+    return data;
+  }
+
+  async destroy(id: number): Promise<number> {
+    await Prisma.organization.delete({ where: { id } });
+
+    return id;
   }
 }

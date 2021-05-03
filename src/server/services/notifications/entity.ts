@@ -17,33 +17,14 @@
  *                                                                                *
  **********************************************************************************/
 
-export enum commonHTTPErrors {
-  badRequest = 400,
-  notFound = 404,
-  unprocessableEntity = 422,
-  notAuthenticated = 401,
-  forbidden = 403,
-  conflict = 409,
-  internalServer = 500,
-}
+import { notification } from ".prisma/client";
 
-export class AppError extends Error {
-  public readonly httpErrorCode: commonHTTPErrors;
-  public readonly isOperational: boolean;
+export type NotificationCreate = Omit<
+  notification,
+  "id" | "createdAt" | "updatedAt"
+>;
 
-  constructor(
-    httpErrorCode: number,
-    description: string,
-    isOperational: boolean,
-  ) {
-    super(description);
-
-    // restore prototype chain
-    Object.setPrototypeOf(this, new.target.prototype);
-
-    this.httpErrorCode = httpErrorCode;
-    this.isOperational = isOperational;
-
-    Error.captureStackTrace(this);
-  }
-}
+export type NotificationUpdate = Omit<
+  notification,
+  "id" | "createdAt" | "updatedAt"
+>;

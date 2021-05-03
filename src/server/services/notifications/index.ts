@@ -17,33 +17,18 @@
  *                                                                                *
  **********************************************************************************/
 
-export enum commonHTTPErrors {
-  badRequest = 400,
-  notFound = 404,
-  unprocessableEntity = 422,
-  notAuthenticated = 401,
-  forbidden = 403,
-  conflict = 409,
-  internalServer = 500,
-}
+import express from "express";
 
-export class AppError extends Error {
-  public readonly httpErrorCode: commonHTTPErrors;
-  public readonly isOperational: boolean;
+import validate from "../../internal/middleware/validator";
+import { create, destroy, findMany, findOneByID, update } from "./controller";
+import { createSchemaValidator, updateSchemaValidator } from "./validator";
 
-  constructor(
-    httpErrorCode: number,
-    description: string,
-    isOperational: boolean,
-  ) {
-    super(description);
+const router = express.Router();
 
-    // restore prototype chain
-    Object.setPrototypeOf(this, new.target.prototype);
+router.get("/v1/notifications", findMany);
+router.get("/v1/notifications/:id", findOneByID);
+router.post("/v1/notifications", validate(createSchemaValidator), create);
+router.put("/v1/notifications/:id", validate(updateSchemaValidator), update);
+router.delete("/v1/notifications/:id", destroy);
 
-    this.httpErrorCode = httpErrorCode;
-    this.isOperational = isOperational;
-
-    Error.captureStackTrace(this);
-  }
-}
+export default router;
