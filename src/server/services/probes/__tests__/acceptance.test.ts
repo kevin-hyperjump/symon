@@ -17,536 +17,458 @@
  *                                                                                *
  **********************************************************************************/
 
-import { probe } from "@prisma/client";
-import bodyParser from "body-parser";
 import express from "express";
-import faker from "faker";
 import request from "supertest";
 
-import errorHandler from "../../../internal/middleware/error-handler";
-import probeService from "../index";
-import { ProbeCreate, ProbeUpdate } from "../entity";
-import { Repository } from "../repository";
+import { probe, probeRequest } from "@prisma/client";
 
-// arrange
+import errorHandler from "../../../internal/middleware/error-handler";
+import {
+  ProbeCreate,
+  ProbeRequestCreate,
+  ProbeRequestUpdate,
+  ProbeUpdate,
+} from "../entity";
+import probesRoute from "../index";
+import { ProbeRepository } from "../repository";
+
 let probes: probe[] = [
   {
     id: 1,
-    projectID: 1,
-    probeName: faker.name.title(),
-    status: "STOP",
-    runMode: "MANUAL",
-    cron: "",
-  },
-  {
-    id: 2,
-    projectID: 12,
-    probeName: "Test duplicate",
-    status: "RUN",
-    runMode: "MANUAL",
-    cron: "",
+    name: "PROBE NAME",
+    description: "PROBE DESC",
+    alerts: '["alert"]',
+    incidentThreshold: 0,
+    recoveryThreshold: 0,
+    enabled: false,
+    interval: 0,
+    createdAt: 0,
+    updatedAt: 0,
   },
 ];
 
-const mockfindMany = jest.fn();
-const mockCount = jest.fn();
-const mockFindById = jest.fn();
-const mockCreate = jest.fn();
-const mockUpdate = jest.fn();
-const mockDeleteByID = jest.fn();
+let probeRequests: probeRequest[] = [
+  {
+    id: 1,
+    probeId: 1,
+    method: "GET",
+    url: "http://example.com",
+    body: "{}",
+    headers: "{}",
+    timeout: 0,
+    createdAt: 0,
+    updatedAt: 0,
+  },
+];
 
 describe("Probe Service", () => {
-  // arrange
   const app = express();
-  app.use(bodyParser.json());
-  app.use(probeService);
+
+  app.use(express.json());
+  app.use(probesRoute);
   app.use(errorHandler());
 
   beforeEach(function () {
     jest.mock("../repository");
 
-    Repository.prototype.findMany = mockfindMany.mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async (args?: any): Promise<probe[]> => {
-        return probes.filter(
-          probe => probe.projectID === args?.where?.projectID,
-        );
-      },
-    );
-    Repository.prototype.count = mockCount.mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async (args?: { where: any }): Promise<number> => {
-        const total = probes.filter(
-          probe =>
-            probe.projectID === args?.where?.projectID &&
-            probe.probeName === args?.where?.probeName,
-        );
+    ProbeRepository.prototype.findMany = async () => {
+      return probes;
+    };
 
-        return total.length;
-      },
-    );
-    Repository.prototype.findById = mockFindById.mockImplementation(
-      async (id: number): Promise<probe | null> => {
-        const result = probes.find(probe => probe.id === id);
+    ProbeRepository.prototype.findManyProbeRequest = async () => {
+      return probeRequests;
+    };
 
-        return result || null;
-      },
-    );
-    Repository.prototype.create = mockCreate.mockImplementation(
-      async (data: ProbeCreate): Promise<probe> => {
-        const lastID = probes.reduce((maxID, probe) => {
-          if (probe.id > maxID) {
-            return probe.id;
-          }
+    ProbeRepository.prototype.findOneByID = async (id: number) => {
+      return probes.find(probe => probe.id === id) || null;
+    };
 
-          return maxID;
-        }, 0);
-        const autoIncrementID = lastID + 1;
-        const createdProb = { id: autoIncrementID, ...data };
-        probes.push(createdProb);
+    ProbeRepository.prototype.findOneByIDProbeRequest = async (
+      probeId: number,
+      id: number,
+    ) => {
+      return (
+        probeRequests.find(
+          probeRequest =>
+            probeRequest.probeId === probeId && probeRequest.id === id,
+        ) || null
+      );
+    };
 
-        return createdProb;
-      },
-    );
-    Repository.prototype.update = mockUpdate.mockImplementation(
-      async (data: ProbeUpdate): Promise<probe> => {
-        const { id } = data;
-        probes = probes.map(probe => {
-          if (probe.id === id) {
-            return { ...probe, ...data };
-          }
+    ProbeRepository.prototype.create = async (input: ProbeCreate) => {
+      const data = { ...probes[0], id: 2, ...input };
 
-          return probe;
-        });
+      probes.push(data);
 
-        const updatedData = probes.find(probe => probe.id === id);
+      return data;
+    };
 
-        if (!updatedData) {
-          throw new Error("Project not found");
+    ProbeRepository.prototype.createProbeRequest = async (
+      input: ProbeRequestCreate,
+    ) => {
+      const data = { ...probeRequests[0], id: 2, ...input };
+
+      probeRequests.push(data);
+
+      return data;
+    };
+
+    ProbeRepository.prototype.update = async (
+      id: number,
+      probeUpdate: ProbeUpdate,
+    ) => {
+      probes = probes.map(probe => {
+        if (probe.id === id) {
+          return { ...probe, probeUpdate };
         }
 
-        return updatedData;
-      },
-    );
-    Repository.prototype.deleteByID = mockDeleteByID.mockImplementation(
-      async (id: number) => {
-        probes = probes.filter(probe => probe.id !== id);
-      },
-    );
+        return probe;
+      });
+
+      const updatedData = probes.find(probe => probe.id === id);
+
+      if (!updatedData) {
+        throw new Error("Probe not found");
+      }
+
+      return updatedData;
+    };
+
+    ProbeRepository.prototype.updateProbeRequest = async (
+      id: number,
+      probeUpdate: ProbeRequestUpdate,
+    ) => {
+      probeRequests = probeRequests.map(probeRequest => {
+        if (probeRequest.id === id) {
+          return { ...probeRequest, probeUpdate };
+        }
+
+        return probeRequest;
+      });
+
+      const updatedData = probeRequests.find(probeRequest => {
+        return probeRequest.id === id;
+      });
+
+      if (!updatedData) {
+        throw new Error("Probe request not found");
+      }
+
+      return updatedData;
+    };
+
+    ProbeRepository.prototype.destroy = async (id: number) => {
+      probes = probes.filter(probe => probe.id !== id);
+
+      return id;
+    };
+
+    ProbeRepository.prototype.destroyProbeRequest = async (id: number) => {
+      probeRequests = probeRequests.filter(probeRequest => {
+        return probeRequest.id !== id;
+      });
+
+      return id;
+    };
   });
 
-  describe("GET /v1/projects/:id/probes", () => {
+  describe("GET /v1/probes", () => {
     it("should return http status code 200", async done => {
-      // act
-      const projectID = 1;
-      const res = await request(app).get(`/v1/projects/${projectID}/probes`);
+      const res = await request(app).get("/v1/probes");
 
-      // assert
-      expect(res.status).toEqual(200);
-      expect(res.body.data).toEqual(
-        probes.filter(probe => probe.projectID === projectID),
-      );
-
+      expect(res.status).toBe(200);
+      expect(res.body.length).toBe(1);
       done();
     });
 
-    it("should return http status code 422", async done => {
-      // arrange
-      mockfindMany.mockImplementationOnce(
-        async (): Promise<probe[]> => {
-          throw new Error("query error");
-        },
-      );
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.findMany = async () => {
+        throw new Error("query error");
+      };
 
-      // act
-      const res = await request(app).get("/v1/projects/1/probes");
+      const res = await request(app).get("/v1/probes");
 
-      // assert
-      expect(res.status).toBe(422);
+      expect(res.status).toBe(500);
       done();
     });
   });
 
-  it("should return http status code 200 with parameters", async done => {
-    // act
-    const projectID = 1;
-    const res = await request(app).get(
-      `/v1/projects/${projectID}/probes?offset=10&size=10&order=asc`,
-    );
+  describe("GET /v1/probes/:probeId/requests", () => {
+    it("should return http status code 200", async done => {
+      const res = await request(app).get("/v1/probes/1/requests");
 
-    // assert
-    expect(res.status).toEqual(200);
-    expect(res.body.data).toEqual(
-      probes.filter(probe => probe.projectID === projectID),
-    );
+      expect(res.status).toBe(200);
+      expect(res.body.length).toBe(1);
+      done();
+    });
 
-    done();
-  });
-
-  describe("POST /v1/projects/:id/probes", () => {
-    it("should return http status code 201", async done => {
-      // arrange
-      const mockData = {
-        probeName: faker.name.title(),
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.findManyProbeRequest = async () => {
+        throw new Error("query error");
       };
 
-      // act
-      const res = await request(app)
-        .post("/v1/projects/1/probes")
-        .send(mockData);
+      const res = await request(app).get("/v1/probes/1/requests");
 
-      // assert
-      expect(res.status).toEqual(201);
-      expect(res.body.data.projectID).toEqual(1);
-      expect(res.body.data.status).toEqual("STOP");
-      expect(res.body.data.runMode).toEqual("MANUAL");
-      expect(res.body.data.cron).toEqual("");
-
-      done();
-    });
-
-    it("should return http status code 400", async done => {
-      // act
-      const res = await request(app).post("/v1/projects/1/probes").send({});
-
-      // assert
-      expect(res.status).toBe(400);
-      done();
-    });
-
-    it("should return http status code 422", async done => {
-      // arrange
-      Repository.prototype.create = async (
-        data: ProbeCreate,
-      ): Promise<probe> => {
-        throw new Error(`Query error: ${data.probeName}`);
-      };
-
-      // act
-      const res = await request(app).post("/v1/projects/1/probes").send({
-        probeName: faker.name.title(),
-      });
-
-      // assert
-      expect(res.status).toBe(422);
-      done();
-    });
-
-    it("should return http status code 409", async done => {
-      // act
-      const res = await request(app).post("/v1/projects/12/probes").send({
-        probeName: "Test duplicate",
-      });
-
-      // assert
-      expect(res.status).toBe(409);
+      expect(res.status).toBe(500);
       done();
     });
   });
 
   describe("GET /v1/probes/:id", () => {
     it("should return http status code 200", async done => {
-      // arrange
-      const probeID = 1;
+      const res = await request(app).get("/v1/probes/1");
 
-      // act
-      const res = await request(app).get(`/v1/probes/${probeID}`);
-
-      // assert
-      expect(res.status).toStrictEqual(200);
-      expect(res.body.data).toStrictEqual(
-        probes.filter(probe => probe.id === probeID)[0],
-      );
-
+      expect(res.status).toBe(200);
+      expect(res.body.id).toBe(1);
       done();
     });
 
     it("should return http status code 404", async done => {
-      // arrange
-      const probeID = 10;
+      const res = await request(app).get("/v1/probes/99");
 
-      // act
-      const res = await request(app).get(`/v1/probes/${probeID}`);
-
-      // assert
       expect(res.status).toBe(404);
       done();
     });
 
-    it("should return http status code 422", async done => {
-      // arrange
-      mockFindById.mockImplementationOnce(async (id: number) => {
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.findOneByID = async (id: number) => {
         throw new Error(`query error id: ${id}`);
-      });
+      };
 
-      // act
       const res = await request(app).get("/v1/probes/3");
 
-      // assert
-      expect(res.status).toBe(422);
+      expect(res.status).toBe(500);
+      done();
+    });
+  });
+
+  describe("GET /v1/probes/:probeId/requests/:id", () => {
+    it("should return http status code 200", async done => {
+      const res = await request(app).get("/v1/probes/1/requests/1");
+
+      expect(res.status).toBe(200);
+      expect(res.body.id).toBe(1);
+      done();
+    });
+
+    it("should return http status code 404", async done => {
+      const res = await request(app).get("/v1/probes/99/requests/99");
+
+      expect(res.status).toBe(404);
+      done();
+    });
+
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.findOneByIDProbeRequest = async (
+        id: number,
+      ) => {
+        throw new Error(`query error id: ${id}`);
+      };
+
+      const res = await request(app).get("/v1/probes/1/requests/3");
+
+      expect(res.status).toBe(500);
+      done();
+    });
+  });
+
+  describe("POST /v1/probes", () => {
+    it("should return http status code 201", async done => {
+      const res = await request(app)
+        .post("/v1/probes")
+        .send({
+          name: "PROBE NAME",
+          description: "PROBE DESC",
+          requests: [
+            {
+              method: "POST",
+              url: "https://example.com/user/login",
+            },
+          ],
+        });
+
+      expect(res.status).toBe(201);
+      expect(probes.length).toBe(2);
+      done();
+    });
+
+    it("should return http status code 400", async done => {
+      const res = await request(app).post("/v1/probes").send({
+        name: 1,
+      });
+
+      expect(res.status).toBe(400);
+      done();
+    });
+
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.create = async (data: ProbeCreate) => {
+        throw new Error(`query error with name: ${data.name}`);
+      };
+
+      const res = await request(app)
+        .post("/v1/probes")
+        .send({
+          name: "PROBE NAME",
+          description: "PROBE DESC",
+          requests: [
+            {
+              method: "POST",
+              url: "https://example.com/user/login",
+            },
+          ],
+        });
+
+      expect(res.status).toBe(500);
+      done();
+    });
+  });
+
+  describe("POST /v1/probes/:probeId/requests", () => {
+    it("should return http status code 201", async done => {
+      const res = await request(app).post("/v1/probes/1/requests").send({
+        method: "POST",
+        url: "https://example.com/user/login",
+      });
+
+      expect(res.status).toBe(201);
+      expect(probeRequests.length).toBe(2);
+      done();
+    });
+
+    it("should return http status code 400", async done => {
+      const res = await request(app).post("/v1/probes/1/requests").send({});
+
+      expect(res.status).toBe(400);
+      done();
+    });
+
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.createProbeRequest = async (
+        data: ProbeRequestCreate,
+      ) => {
+        throw new Error(`query error with url: ${data.url}`);
+      };
+
+      const res = await request(app).post("/v1/probes/1/requests").send({
+        method: "POST",
+        url: "https://example.com/user/login",
+      });
+
+      expect(res.status).toBe(500);
       done();
     });
   });
 
   describe("PUT /v1/probes/:id", () => {
     it("should return http status code 200", async done => {
-      // arrange
-      const probeID = 1;
-      const probeName = faker.name.title();
-
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}`).send({
-        probeName,
+      const res = await request(app).put("/v1/probes/2").send({
+        name: "PROBE NAME",
+        description: "PROBE DESC",
       });
 
-      // assert
       expect(res.status).toBe(200);
-      expect(res.body.data).toStrictEqual(
-        probes.find(probe => probe.id === probeID),
-      );
-      done();
-    });
-
-    it("should return http status code 404", async done => {
-      // arrange
-      const probeID = 777;
-      const probeName = faker.name.title();
-
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}`).send({
-        probeName,
-      });
-
-      // assert
-      expect(res.status).toBe(404);
+      expect(probes.length).toBe(2);
       done();
     });
 
     it("should return http status code 400", async done => {
-      // arrange
-      const probeID = 1;
+      const res = await request(app).put("/v1/probes/2").send({
+        id: 2,
+        name: "PROBE NAME",
+        description: "PROBE DESC",
+      });
 
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}`).send({});
-
-      // assert
       expect(res.status).toBe(400);
       done();
     });
 
-    it("should return http status code 422", async done => {
-      // arrange
-      const probeID = 1;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mockUpdate.mockImplementationOnce(async (data: any) => {
-        throw new Error(`query error id: ${data?.id}`);
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.update = async (id: number) => {
+        throw new Error(`query error id: ${id}`);
+      };
+
+      const res = await request(app).put("/v1/probes/2").send({
+        name: "PROBE NAME",
+        description: "PROBE DESC",
       });
 
-      // act
-      const res = await request(app)
-        .put(`/v1/probes/${probeID}`)
-        .send({ probeName: faker.name.title() });
+      expect(res.status).toBe(500);
+      done();
+    });
+  });
 
-      // assert
-      expect(res.status).toBe(422);
+  describe("PUT /v1/probes/:probeId/requests/:id", () => {
+    it("should return http status code 200", async done => {
+      const res = await request(app).put("/v1/probes/1/requests/1").send({
+        url: "http://example.com",
+      });
+
+      expect(res.status).toBe(200);
+      expect(probes.length).toBe(2);
       done();
     });
 
-    it("should return http status code 409", async done => {
-      // arrange
-      const probeID = 1;
-      mockCount.mockReturnValueOnce(1);
+    it("should return http status code 400", async done => {
+      const res = await request(app).put("/v1/probes/1/requests/1").send({
+        id: 1,
+        url: "http://example.com",
+      });
 
-      // act
-      const res = await request(app)
-        .put(`/v1/probes/${probeID}`)
-        .send({ probeName: faker.name.title() });
+      expect(res.status).toBe(400);
+      done();
+    });
 
-      // assert
-      expect(res.status).toBe(409);
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.updateProbeRequest = async (id: number) => {
+        throw new Error(`query error id: ${id}`);
+      };
+
+      const res = await request(app).put("/v1/probes/1/requests/1").send({
+        url: "http://example.com",
+      });
+
+      expect(res.status).toBe(500);
       done();
     });
   });
 
   describe("DELETE /v1/probes/:id", () => {
     it("should return http status code 200", async done => {
-      // arrange
-      const probeID = 1;
+      const res = await request(app).delete("/v1/probes/2");
 
-      // act
-      const res = await request(app).delete(`/v1/probes/${probeID}`);
-
-      // assert
-      expect(res.status).toStrictEqual(200);
+      expect(res.status).toBe(200);
       done();
     });
 
-    it("should return http status code 404", async done => {
-      // arrange
-      const probeID = 100;
-
-      // act
-      const res = await request(app).delete(`/v1/probes/${probeID}`);
-
-      // assert
-      expect(res.status).toBe(404);
-      done();
-    });
-
-    it("should return http status code 422", async done => {
-      // arrange
-      const probeID = 2;
-      mockDeleteByID.mockImplementationOnce(async (id: number) => {
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.destroy = async (id: number) => {
         throw new Error(`query error id: ${id}`);
-      });
+      };
 
-      // act
-      const res = await request(app).delete(`/v1/probes/${probeID}`);
+      const res = await request(app).delete("/v1/probes/3");
 
-      // assert
-      expect(res.status).toBe(422);
+      expect(res.status).toBe(500);
       done();
     });
   });
 
-  describe("PUT /v1/probes/:id/start", () => {
+  describe("DELETE /v1/probes/:probeId/requests/:id", () => {
     it("should return http status code 200", async done => {
-      // arrange
-      const probeID = 2;
+      const res = await request(app).delete("/v1/probes/2/requests/1");
 
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}/start`);
-
-      // assert
       expect(res.status).toBe(200);
-      expect(probes.find(probe => probe.id === probeID)?.status).toEqual("RUN");
       done();
     });
 
-    it("should return http status code 404", async done => {
-      // arrange
-      const probeID = 700;
+    it("should return http status code 500", async done => {
+      ProbeRepository.prototype.destroyProbeRequest = async (id: number) => {
+        throw new Error(`query error id: ${id}`);
+      };
 
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}/start`);
+      const res = await request(app).delete("/v1/probes/2/requests/2");
 
-      // assert
-      expect(res.status).toBe(404);
-      done();
-    });
-
-    it("should return http status code 422", async done => {
-      // arrange
-      const probeID = 2;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mockUpdate.mockImplementationOnce(async (data: any) => {
-        throw new Error(`query error id: ${data?.id}`);
-      });
-
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}/start`);
-
-      // assert
-      expect(res.status).toBe(422);
-      done();
-    });
-  });
-
-  describe("PUT /v1/probes/:id/stop", () => {
-    it("should return http status code 200", async done => {
-      // arrange
-      const probeID = 2;
-
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}/stop`);
-
-      // assert
-      expect(res.status).toBe(200);
-      expect(probes.find(probe => probe.id === probeID)?.status).toEqual(
-        "STOP",
-      );
-      done();
-    });
-
-    it("should return http status code 404", async done => {
-      // arrange
-      const probeID = 700;
-
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}/stop`);
-
-      // assert
-      expect(res.status).toBe(404);
-      done();
-    });
-
-    it("should return http status code 422", async done => {
-      // arrange
-      const probeID = 2;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mockUpdate.mockImplementationOnce(async (data: any) => {
-        throw new Error(`query error id: ${data?.id}`);
-      });
-
-      // act
-      const res = await request(app).put(`/v1/probes/${probeID}/stop`);
-
-      // assert
-      expect(res.status).toBe(422);
-      done();
-    });
-  });
-
-  describe("PUT /v1/probes/:id/schedule", () => {
-    it("should return http status code 200", async done => {
-      // arrange
-      const probeID = 2;
-      const cron = "*/10 * * * *";
-
-      // act
-      const res = await request(app)
-        .put(`/v1/probes/${probeID}/schedule`)
-        .send({ cron });
-
-      // assert
-      const probeData = probes.find(probe => probe.id === probeID);
-      expect(res.status).toBe(200);
-      expect(probeData?.cron).toEqual(cron);
-      expect(probeData?.runMode).toEqual("CRON");
-      done();
-    });
-
-    it("should return http status code 404", async done => {
-      // arrange
-      const probeID = 700;
-      const cron = "*/10 * * * *";
-
-      // act
-      const res = await request(app)
-        .put(`/v1/probes/${probeID}/schedule`)
-        .send({ cron });
-
-      // assert
-      expect(res.status).toBe(404);
-      done();
-    });
-
-    it("should return http status code 422", async done => {
-      // arrange
-      const probeID = 2;
-      const cron = "*/10 * * * *";
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mockUpdate.mockImplementationOnce(async (data: any) => {
-        throw new Error(`query error id: ${data?.id}`);
-      });
-
-      // act
-      const res = await request(app)
-        .put(`/v1/probes/${probeID}/schedule`)
-        .send({ cron });
-
-      // assert
-      expect(res.status).toBe(422);
+      expect(res.status).toBe(500);
       done();
     });
   });

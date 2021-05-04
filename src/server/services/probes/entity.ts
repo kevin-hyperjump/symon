@@ -17,26 +17,21 @@
  *                                                                                *
  **********************************************************************************/
 
-export interface Probe {
-  id: number;
-  probeName?: string;
-  status?: string;
-  runMode?: string;
-  cron?: string;
-}
+import { probe, probeRequest } from "@prisma/client";
 
-export interface ProbeCreate {
-  projectID: number;
-  probeName: string;
-  status: string;
-  runMode: string;
-  cron: string;
-}
+export type ProbeCreate = Omit<
+  probe & { requests: probeRequest[] },
+  "id" | "createdAt" | "updatedAt"
+>;
 
-export interface ProbeUpdate {
-  id: number;
-  probeName?: string;
-  status?: string;
-  runMode?: string;
-  cron?: string;
-}
+export type ProbeRequestCreate = Omit<
+  probeRequest,
+  "id" | "createdAt" | "updatedAt"
+>;
+
+export type ProbeUpdate = Omit<probe, "id" | "createdAt" | "updatedAt">;
+
+export type ProbeRequestUpdate = Omit<
+  probeRequest,
+  "id" | "createdAt" | "updatedAt"
+>;

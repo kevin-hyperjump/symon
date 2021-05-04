@@ -24,9 +24,9 @@ import auth from "./services/auth";
 import authMiddleware from "./services/auth/middleware";
 import locations from "./services/locations";
 import monika from "./services/monika";
+import probes from "./services/probes";
 import notifications from "./services/notifications";
 import organizations from "./services/organizations";
-import probes from "./services/probes";
 import projects from "./services/projects";
 import users from "./services/users";
 
@@ -46,10 +46,10 @@ router.use(authMiddleware);
 // ********************************
 
 router.use(users);
+router.use(probes);
 router.use(notifications);
 router.use(organizations);
 router.use(locations);
-router.use(probes);
 router.use(projects);
 router.use(apiKeys);
 

@@ -36,18 +36,7 @@ model project {
   id              Int      @id @default(autoincrement())
   name            String
   organization_id Int
-  probe           probe[]
   apiKey          apiKey[]
-}
-
-model probe {
-  id        Int     @id @default(autoincrement())
-  projectID Int
-  probeName String
-  status    String
-  runMode   String
-  cron      String
-  project   project @relation(fields: [projectID], references: [id])
 }
 
 model config {
@@ -111,4 +100,31 @@ model notification {
   data      String
   createdAt Int
   updatedAt Int
+}
+
+model probe {
+  id                Int            @id @default(autoincrement())
+  name              String
+  description       String?
+  alerts            String?
+  interval          Int?
+  incidentThreshold Int?
+  recoveryThreshold Int?
+  enabled           Boolean?
+  createdAt         Int
+  updatedAt         Int
+  requests          probeRequest[]
+}
+
+model probeRequest {
+  id        Int     @id @default(autoincrement())
+  url       String
+  method    String?
+  timeout   Int?
+  headers   String?
+  body      String?
+  createdAt Int
+  updatedAt Int
+  probeId   Int?
+  probe     probe?  @relation(fields: [probeId], references: [id])
 }

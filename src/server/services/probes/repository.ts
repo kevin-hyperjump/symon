@@ -17,64 +17,178 @@
  *                                                                                *
  **********************************************************************************/
 
-import { Probe, ProbeCreate, ProbeUpdate } from "./entity";
+import { probe, probeRequest } from "@prisma/client";
 
 import Prisma from "../../prisma/prisma-client";
+import {
+  ProbeCreate,
+  ProbeRequestCreate,
+  ProbeRequestUpdate,
+  ProbeUpdate,
+} from "./entity";
 
-export class Repository {
-  async findMany(args?: {
-    skip?: number;
-    take?: number;
-    orderBy?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-    where?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  }): Promise<Probe[]> {
-    const data = await Prisma.probe.findMany(args);
+export class ProbeRepository {
+  async findMany({
+    offset,
+    size,
+    order,
+  }: {
+    offset: number;
+    size: number;
+    order: "asc" | "desc";
+  }): Promise<probe[]> {
+    const data = await Prisma.probe.findMany({
+      skip: offset,
+      take: size,
+      orderBy: {
+        id: order,
+      },
+      include: {
+        requests: true,
+      },
+    });
 
     return data;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async count(args?: { where: any }): Promise<number> {
-    const total = await Prisma.probe.count(args);
-
-    return total;
-  }
-
-  async findById(id: number): Promise<Probe | null> {
-    const result = await Prisma.probe.findUnique({
-      where: { id },
-    });
-
-    return result;
-  }
-
-  async create(data: ProbeCreate): Promise<Probe> {
-    const result = await Prisma.probe.create({
-      data: {
-        projectID: data.projectID,
-        probeName: data.probeName,
-        status: data.status,
-        runMode: data.runMode,
-        cron: data.cron,
+  async findOneByID(id: number): Promise<probe | null> {
+    const data = await Prisma.probe.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        requests: true,
       },
     });
 
-    return result;
+    return data;
   }
 
-  async update(data: ProbeUpdate): Promise<Probe> {
-    const { id, probeName } = data;
-    const result = await Prisma.probe.update({
-      where: { id },
-      data: { probeName },
+  async create(res: ProbeCreate): Promise<probe> {
+    const dateNow = Math.floor(Date.now() / 1000);
+
+    const { requests, ...resRest } = res;
+
+    const data = await Prisma.probe.create({
+      data: {
+        ...resRest,
+        createdAt: dateNow,
+        updatedAt: dateNow,
+      },
     });
 
-    return result;
+    requests.forEach(async request => {
+      await this.createProbeRequest({ ...request, probeId: data.id });
+    });
+
+    return data;
   }
 
-  async deleteByID(id: number): Promise<void> {
-    await Prisma.location.delete({
-      where: { entityId: id },
+  async update(id: number, res: ProbeUpdate): Promise<probe> {
+    const dateNow = Math.floor(Date.now() / 1000);
+
+    const data = await Prisma.probe.update({
+      where: {
+        id,
+      },
+      data: {
+        ...res,
+        updatedAt: dateNow,
+      },
     });
+
+    return data;
+  }
+
+  async destroy(id: number): Promise<number> {
+    await Prisma.probe.delete({
+      where: {
+        id,
+      },
+    });
+
+    return id;
+  }
+
+  async findManyProbeRequest({
+    probeId,
+    offset,
+    size,
+    order,
+  }: {
+    probeId: number;
+    offset: number;
+    size: number;
+    order: "asc" | "desc";
+  }): Promise<probeRequest[]> {
+    const data = await Prisma.probeRequest.findMany({
+      skip: offset,
+      take: size,
+      where: {
+        probeId,
+      },
+      orderBy: {
+        id: order,
+      },
+    });
+
+    return data;
+  }
+
+  async findOneByIDProbeRequest(
+    probeId: number,
+    id: number,
+  ): Promise<probeRequest | null> {
+    const data = await Prisma.probeRequest.findFirst({
+      where: {
+        probeId,
+        id,
+      },
+    });
+
+    return data;
+  }
+
+  async createProbeRequest(res: ProbeRequestCreate): Promise<probeRequest> {
+    const dateNow = Math.floor(Date.now() / 1000);
+
+    const data = await Prisma.probeRequest.create({
+      data: {
+        ...res,
+        createdAt: dateNow,
+        updatedAt: dateNow,
+      },
+    });
+
+    return data;
+  }
+
+  async updateProbeRequest(
+    id: number,
+    res: ProbeRequestUpdate,
+  ): Promise<probeRequest> {
+    const dateNow = Math.floor(Date.now() / 1000);
+
+    const data = await Prisma.probeRequest.update({
+      where: {
+        id,
+      },
+      data: {
+        ...res,
+        updatedAt: dateNow,
+      },
+    });
+
+    return data;
+  }
+
+  async destroyProbeRequest(id: number): Promise<number> {
+    await Prisma.probeRequest.delete({
+      where: {
+        id,
+      },
+    });
+
+    return id;
   }
 }

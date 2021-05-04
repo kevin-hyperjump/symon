@@ -17,12 +17,31 @@
  *                                                                                *
  **********************************************************************************/
 
-import { object, string } from "joi";
+import Joi from "joi";
 
-export const createValidator = object().keys({
-  probeName: string().required().label("Probe Name"),
+const probeRequestSchemaValidator = Joi.object().keys({
+  method: Joi.string().valid("GET", "POST", "PUT", "DELETE", "HEAD", "OPTION"),
+  url: Joi.string().required(),
+  timeout: Joi.number(),
+  headers: Joi.object(),
+  body: Joi.object(),
 });
 
-export const scheduleValidator = object().keys({
-  cron: string().required().label("Cron"),
+const schemaValidator = Joi.object().keys({
+  name: Joi.string(),
+  description: Joi.string(),
+  interval: Joi.number(),
+  incidentThreshold: Joi.number(),
+  recoveryThreshold: Joi.number(),
+  alerts: Joi.array().items(Joi.string()),
 });
+
+export const createSchemaValidator = schemaValidator.keys({
+  requests: Joi.array().items(probeRequestSchemaValidator),
+});
+
+export const updateSchemaValidator = schemaValidator;
+
+export const createProbeRequestSchemaValidator = probeRequestSchemaValidator;
+
+export const updateProbeRequestSchemaValidator = probeRequestSchemaValidator;

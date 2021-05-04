@@ -18,41 +18,44 @@
  **********************************************************************************/
 
 import { NextFunction, Request, Response } from "express";
+
+import { probeRequest } from "@prisma/client";
+
 import { AppError, commonHTTPErrors } from "../../internal/app-error";
-import { Repository } from "./repository";
+import { ProbeRepository } from "./repository";
 
-const repo = new Repository();
+const repository = new ProbeRepository();
 
-export async function index(
-  req: Request,
+export async function findMany(
+  req: Request<
+    null,
+    null,
+    null,
+    {
+      offset?: string;
+      size?: string;
+      order?: "asc" | "desc";
+    }
+  >,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const { params, query } = req;
-  const skip = parseInt((query.offset as string) ?? "0", 10);
-  const take = parseInt((query.size as string) ?? "10", 10);
-  const order = (query.order as "asc" | "desc") ?? "asc";
-
   try {
-    const data = await repo.findMany({
-      skip,
-      take,
-      orderBy: {
-        probeName: order,
-      },
-      where: {
-        projectID: parseInt(params.id, 10),
-      },
+    const data = await repository.findMany({
+      offset: parseInt(req.query.offset ?? "0", 10),
+      size: parseInt(req.query.size ?? "10", 10),
+      order: req.query.order ?? "asc",
     });
 
-    res.status(200).send({
-      result: "SUCCESS",
-      message: "Successfully get list of probes",
-      data,
-    });
+    res.status(200).send(
+      data.map(d => ({
+        ...d,
+        alerts: d.alerts ? JSON.parse(d.alerts) : d.alerts,
+      })),
+    );
   } catch (err) {
     const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
+      commonHTTPErrors.internalServer,
       err.message,
       true,
     );
@@ -61,7 +64,7 @@ export async function index(
   }
 }
 
-export async function show(
+export async function findOneByID(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -69,27 +72,27 @@ export async function show(
   const id = parseInt(req.params.id, 10);
 
   try {
-    const data = await repo.findById(id);
+    const data = await repository.findOneByID(id);
 
     if (!data) {
       const error = new AppError(
         commonHTTPErrors.notFound,
-        "Probe is not found",
+        "Probe not found",
         true,
       );
 
       next(error);
+
       return;
     }
 
     res.status(200).send({
-      result: "SUCCESS",
-      message: "Successfully get probe",
-      data,
+      ...data,
+      alerts: data.alerts ? JSON.parse(data.alerts) : data.alerts,
     });
   } catch (err) {
     const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
+      commonHTTPErrors.internalServer,
       err.message,
       true,
     );
@@ -103,48 +106,23 @@ export async function create(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const { body, params } = req;
-  const { probeName } = body;
-  const id = parseInt(params.id, 10);
+  const { alerts, requests, ...bodyRest } = req.body;
 
   try {
-    // check probe name
-    const totalProbe = await repo.count({
-      where: {
-        projectID: id,
-        probeName,
-      },
-    });
-    const isProbeNameUnique = totalProbe === 0;
-
-    if (!isProbeNameUnique) {
-      const error = new AppError(
-        commonHTTPErrors.conflict,
-        "Probe name already exist",
-        true,
-      );
-
-      next(error);
-      return;
-    }
-
-    // create probe
-    const data = await repo.create({
-      projectID: id,
-      probeName,
-      status: "STOP",
-      runMode: "MANUAL",
-      cron: "",
+    const data = await repository.create({
+      ...bodyRest,
+      alerts: JSON.stringify(alerts),
+      requests: requests.map((request: probeRequest) => ({
+        ...requests,
+        headers: JSON.stringify(request.headers),
+        body: JSON.stringify(request.body),
+      })),
     });
 
-    res.status(201).send({
-      result: "SUCCESS",
-      message: "Successfully create probe",
-      data,
-    });
+    res.status(201).send({ id: data.id });
   } catch (err) {
     const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
+      commonHTTPErrors.internalServer,
       err.message,
       true,
     );
@@ -158,55 +136,15 @@ export async function update(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const { body, params } = req;
-  const id = parseInt(params.id, 10);
-  const { probeName } = body;
+  const id = parseInt(req.params.id, 10);
 
   try {
-    const probe = await repo.findById(id);
+    await repository.update(id, req.body);
 
-    if (!probe) {
-      const error = new AppError(
-        commonHTTPErrors.notFound,
-        "Probe is not found",
-        true,
-      );
-
-      next(error);
-      return;
-    }
-
-    // check probe name
-    const totalProbe = await repo.count({
-      where: {
-        projectID: id,
-        probeName,
-      },
-    });
-    const isProbeNameUnique = totalProbe === 0;
-
-    if (!isProbeNameUnique) {
-      const error = new AppError(
-        commonHTTPErrors.conflict,
-        "Probe name already exist",
-        true,
-      );
-
-      next(error);
-      return;
-    }
-
-    // update probe
-    const data = await repo.update({ id, probeName });
-
-    res.status(200).send({
-      result: "SUCCESS",
-      message: "Successfully update probe",
-      data,
-    });
+    res.status(200).send({ id });
   } catch (err) {
     const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
+      commonHTTPErrors.internalServer,
       err.message,
       true,
     );
@@ -223,28 +161,12 @@ export async function destroy(
   const id = parseInt(req.params.id, 10);
 
   try {
-    const probe = await repo.findById(id);
+    await repository.destroy(id);
 
-    if (!probe) {
-      const error = new AppError(
-        commonHTTPErrors.notFound,
-        "Probe is not found",
-        true,
-      );
-
-      next(error);
-      return;
-    }
-
-    await repo.deleteByID(id);
-
-    res.status(200).send({
-      result: "SUCCESS",
-      message: "Successfully delete probe",
-    });
+    res.status(200).send({ message: "Successful" });
   } catch (err) {
     const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
+      commonHTTPErrors.internalServer,
       err.message,
       true,
     );
@@ -253,38 +175,40 @@ export async function destroy(
   }
 }
 
-export async function start(
-  req: Request,
+export async function findManyProbeRequest(
+  req: Request<
+    { probeId: string },
+    null,
+    null,
+    {
+      offset?: string;
+      size?: string;
+      order?: "asc" | "desc";
+    }
+  >,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const { params } = req;
-  const id = parseInt(params.id, 10);
+  const probeId = parseInt(req.params.probeId, 10);
 
   try {
-    const probe = await repo.findById(id);
-
-    if (!probe) {
-      const error = new AppError(
-        commonHTTPErrors.notFound,
-        "Probe is not found",
-        true,
-      );
-
-      next(error);
-      return;
-    }
-
-    // update probe
-    await repo.update({ id, status: "RUN" });
-
-    res.status(200).send({
-      result: "SUCCESS",
-      message: "Successfully start probe",
+    const data = await repository.findManyProbeRequest({
+      probeId,
+      offset: parseInt(req.query.offset ?? "0", 10),
+      size: parseInt(req.query.size ?? "10", 10),
+      order: req.query.order ?? "asc",
     });
+
+    res.status(200).send(
+      data.map(d => ({
+        ...d,
+        headers: d.headers ? JSON.parse(d.headers) : d.headers,
+        body: d.headers ? JSON.parse(d.headers) : d.headers,
+      })),
+    );
   } catch (err) {
     const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
+      commonHTTPErrors.internalServer,
       err.message,
       true,
     );
@@ -293,38 +217,37 @@ export async function start(
   }
 }
 
-export async function stop(
+export async function findOneByIDProbeRequest(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const { params } = req;
-  const id = parseInt(params.id, 10);
+  const probeId = parseInt(req.params.probeId, 10);
+  const id = parseInt(req.params.id, 10);
 
   try {
-    const probe = await repo.findById(id);
+    const data = await repository.findOneByIDProbeRequest(probeId, id);
 
-    if (!probe) {
+    if (!data) {
       const error = new AppError(
         commonHTTPErrors.notFound,
-        "Probe is not found",
+        "Probe request not found",
         true,
       );
 
       next(error);
+
       return;
     }
 
-    // update probe
-    await repo.update({ id, status: "STOP" });
-
     res.status(200).send({
-      result: "SUCCESS",
-      message: "Successfully stop probe",
+      ...data,
+      headers: data.headers ? JSON.parse(data.headers) : data.headers,
+      body: data.headers ? JSON.parse(data.headers) : data.headers,
     });
   } catch (err) {
     const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
+      commonHTTPErrors.internalServer,
       err.message,
       true,
     );
@@ -333,39 +256,74 @@ export async function stop(
   }
 }
 
-export async function schedule(
+export async function createProbeRequest(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const { body, params } = req;
-  const id = parseInt(params.id, 10);
-  const { cron } = body;
+  const probeId = parseInt(req.params.probeId, 10);
 
   try {
-    const probe = await repo.findById(id);
-
-    if (!probe) {
-      const error = new AppError(
-        commonHTTPErrors.notFound,
-        "Probe is not found",
-        true,
-      );
-
-      next(error);
-      return;
-    }
-
-    // update probe
-    await repo.update({ id, cron, runMode: "CRON" });
-
-    res.status(200).send({
-      result: "SUCCESS",
-      message: "Successfully set probe schedule",
+    const data = await repository.createProbeRequest({
+      ...req.body,
+      probeId,
+      headers: JSON.stringify(req.body?.headers),
+      body: JSON.stringify(req.body?.body),
     });
+
+    res.status(201).send({ id: data.id });
   } catch (err) {
     const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
+      commonHTTPErrors.internalServer,
+      err.message,
+      true,
+    );
+
+    next(error);
+  }
+}
+
+export async function updateProbeRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const probeId = parseInt(req.params.probeId, 10);
+  const id = parseInt(req.params.id, 10);
+
+  try {
+    await repository.updateProbeRequest(id, {
+      ...req.body,
+      probeId,
+      headers: JSON.stringify(req.body?.headers),
+      body: JSON.stringify(req.body?.body),
+    });
+
+    res.status(200).send({ id });
+  } catch (err) {
+    const error = new AppError(
+      commonHTTPErrors.internalServer,
+      err.message,
+      true,
+    );
+
+    next(error);
+  }
+}
+export async function destroyProbeRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const id = parseInt(req.params.id, 10);
+
+  try {
+    await repository.destroyProbeRequest(id);
+
+    res.status(200).send({ message: "Successful" });
+  } catch (err) {
+    const error = new AppError(
+      commonHTTPErrors.internalServer,
       err.message,
       true,
     );

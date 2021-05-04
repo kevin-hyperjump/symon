@@ -17,30 +17,48 @@
  *                                                                                *
  **********************************************************************************/
 
-import { Router } from "express";
+import express from "express";
 
 import validate from "../../internal/middleware/validator";
 import {
-  index,
   create,
-  show,
-  update,
+  createProbeRequest,
   destroy,
-  schedule,
-  start,
-  stop,
+  destroyProbeRequest,
+  findMany,
+  findManyProbeRequest,
+  findOneByID,
+  findOneByIDProbeRequest,
+  update,
+  updateProbeRequest,
 } from "./controller";
-import { createValidator, scheduleValidator } from "./validator";
+import {
+  createProbeRequestSchemaValidator,
+  createSchemaValidator,
+  updateProbeRequestSchemaValidator,
+  updateSchemaValidator,
+} from "./validator";
 
-const router = Router();
+const router = express.Router();
 
-router.get("/v1/projects/:id/probes", index);
-router.post("/v1/projects/:id/probes", validate(createValidator), create);
-router.get("/v1/probes/:id", show);
-router.put("/v1/probes/:id", validate(createValidator), update);
+router.get("/v1/probes", findMany);
+router.get("/v1/probes/:id", findOneByID);
+router.post("/v1/probes", validate(createSchemaValidator), create);
+router.put("/v1/probes/:id", validate(updateSchemaValidator), update);
 router.delete("/v1/probes/:id", destroy);
-router.put("/v1/probes/:id/start", start);
-router.put("/v1/probes/:id/stop", stop);
-router.put("/v1/probes/:id/schedule", validate(scheduleValidator), schedule);
+
+router.get("/v1/probes/:probeId/requests", findManyProbeRequest);
+router.get("/v1/probes/:probeId/requests/:id", findOneByIDProbeRequest);
+router.post(
+  "/v1/probes/:probeId/requests",
+  validate(createProbeRequestSchemaValidator),
+  createProbeRequest,
+);
+router.put(
+  "/v1/probes/:probeId/requests/:id",
+  validate(updateProbeRequestSchemaValidator),
+  updateProbeRequest,
+);
+router.delete("/v1/probes/:probeId/requests/:id", destroyProbeRequest);
 
 export default router;

@@ -82,7 +82,7 @@ export class NotificationRepository {
   }
 
   async destroy(id: number): Promise<number> {
-    await Prisma.organization.delete({ where: { id } });
+    await Prisma.notification.delete({ where: { id } });
 
     return id;
   }
