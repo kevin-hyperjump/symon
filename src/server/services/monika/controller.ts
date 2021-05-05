@@ -69,7 +69,7 @@ export async function createReport(
     if (!monika) {
       throw new AppError(
         commonHTTPErrors.badRequest,
-        "Invalid monika_id",
+        "Invalid monika_instance_id",
         true,
       );
     }
@@ -78,23 +78,25 @@ export async function createReport(
       monikaId: monika.id,
       monikaInstanceId: monika.instanceId,
       configVersion: config_version,
-      data: reportData,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: reportData.map((row: any) => ({
+        timestamp: row.timestamp,
+        probeId: row.probe_id,
+        requestUrl: row.request_url,
+        requestMethod: row.request_method,
+        requestHeader: row.request_header,
+        requestBody: row.request_body,
+        responseHeader: row.response_header,
+        responseBody: row.response_body,
+        responseStatus: row.response_status,
+        responseTime: row.response_time,
+        responseSize: row.response_size,
+      })),
     });
 
-    const isConfigUpdated = monika.version !== config_version;
-    const config = JSON.parse(monika?.config ?? "{}");
-
-    res.status(201).send({
-      result: isConfigUpdated ? "updated" : "ok",
+    res.status(201).json({
+      result: "SUCCESS",
       message: "Successfully report history",
-      ...(isConfigUpdated
-        ? {
-            data: {
-              config_version: monika.version,
-              ...config,
-            },
-          }
-        : {}),
     });
   } catch (err) {
     const error =

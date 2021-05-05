@@ -44,8 +44,10 @@ const reportDataSchemaValidator = Joi.object().keys({
   request_method: Joi.string().required(),
   request_url: Joi.string().required(),
   request_header: Joi.string(),
+  request_body: Joi.string(),
   response_status: Joi.number().required(),
   response_header: Joi.string(),
+  response_body: Joi.string(),
   response_time: Joi.number().required(),
   response_size: Joi.number(),
 });
