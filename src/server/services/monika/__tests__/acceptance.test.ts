@@ -21,49 +21,19 @@ import express from "express";
 import faker from "faker";
 import request from "supertest";
 
-import errorHandler from "../../../internal/middleware/error-handler";
-import {
-  MonikaHandshake,
-  MonikaHandshakeCreate,
-  ReportCreate,
-} from "../entity";
-import monika from "../index";
-import { MonikaRepository, ReportRepository } from "../repository";
-import { Repository as ApiKeyRepository } from "../../api-keys/repository";
+import { monika } from "@prisma/client";
 
-const handshakes: MonikaHandshake[] = [
+import errorHandler from "../../../internal/middleware/error-handler";
+import { Repository as ApiKeyRepository } from "../../api-keys/repository";
+import { MonikaHandshakeCreate, ReportCreate } from "../entity";
+import monikaService from "../index";
+import { MonikaRepository, ReportRepository } from "../repository";
+
+const handshakes: monika[] = [
   {
     id: 1,
-    version: faker.random.uuid(),
-    monika: {
-      id: faker.random.uuid(),
-      ip_address: faker.internet.ip(),
-    },
-    config: {
-      probes: [
-        {
-          id: faker.random.uuid(),
-          name: "PROBE 1",
-          alerts: [],
-          requests: [],
-          recoveryThreshold: 50,
-          incidentThreshold: 50,
-        },
-      ],
-      notifications: [
-        {
-          id: faker.random.uuid(),
-          type: "smtp",
-          data: {
-            username: faker.internet.userName(),
-            password: faker.internet.password(),
-            hostname: "localhost",
-            port: 587,
-            recipients: [],
-          },
-        },
-      ],
-    },
+    hostname: faker.internet.domainName(),
+    instanceId: faker.random.uuid(),
   },
 ];
 
@@ -71,7 +41,7 @@ describe("Monika Handshake Service", () => {
   const app = express();
 
   app.use(express.json());
-  app.use(monika);
+  app.use(monikaService);
   app.use(errorHandler());
 
   beforeEach(function () {
@@ -114,14 +84,8 @@ describe("Monika Handshake Service", () => {
         .post("/v1/monika/handshake")
         .set({ "x-api-key": "123" })
         .send({
-          monika: {
-            id: faker.random.uuid(),
-            ip_address: faker.internet.ip(),
-          },
-          data: {
-            probes: [],
-            notifications: [],
-          },
+          hostname: faker.random.uuid(),
+          instanceId: faker.random.uuid(),
         });
 
       expect(res.status).toBe(201);
@@ -143,20 +107,15 @@ describe("Monika Handshake Service", () => {
       MonikaRepository.prototype.createHandshake = async (
         data: MonikaHandshakeCreate,
       ) => {
-        throw new Error(`query error with id: ${data.monika.id}`);
+        throw new Error(`query error with instanceId: ${data.instanceId}`);
       };
 
       const res = await request(app)
         .post("/v1/monika/handshake")
         .set({ "x-api-key": "123" })
         .send({
-          monika: {
-            ip_address: faker.internet.ip(),
-          },
-          data: {
-            probes: [],
-            notifications: [],
-          },
+          hostname: faker.random.uuid(),
+          instanceId: faker.random.uuid(),
         });
 
       expect(res.status).toBe(422);
@@ -169,20 +128,14 @@ describe("Monika Report Service", () => {
   const app = express();
 
   app.use(express.json());
-  app.use(monika);
+  app.use(monikaService);
   app.use(errorHandler());
 
   beforeEach(function () {
     jest.mock("../repository");
 
-    MonikaRepository.prototype.findOneByInstanceID = async (id: string) => {
-      return {
-        id: 1,
-        config: "{}",
-        version: faker.random.uuid(),
-        instanceId: id,
-        ipAddress: "127.0.0.1",
-      };
+    MonikaRepository.prototype.findOneByInstanceID = async () => {
+      return handshakes[0];
     };
 
     ReportRepository.prototype.create = async (reportCreate: ReportCreate) => {

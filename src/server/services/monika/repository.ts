@@ -17,9 +17,10 @@
  *                                                                                *
  **********************************************************************************/
 
-import { v4 as uuid } from "uuid";
-import { Report, ReportCreate, MonikaHandshakeCreate, Monika } from "./entity";
+import { monika } from "@prisma/client";
+
 import Prisma from "../../prisma/prisma-client";
+import { MonikaHandshakeCreate, Report, ReportCreate } from "./entity";
 
 export class ReportRepository {
   async findMany(args?: {
@@ -64,25 +65,18 @@ export class ReportRepository {
 }
 
 export class MonikaRepository {
-  async createHandshake({
-    config,
-    ...res
-  }: MonikaHandshakeCreate): Promise<{ version: string }> {
+  async createHandshake(res: MonikaHandshakeCreate): Promise<monika> {
     const data = await Prisma.monika.create({
       data: {
-        version: uuid(),
-        config: JSON.stringify(config),
-        instanceId: res.monika.id,
-        ipAddress: res.monika.ip_address,
+        hostname: res.hostname,
+        instanceId: res.instanceId,
       },
     });
 
-    return {
-      version: data.version,
-    };
+    return data;
   }
 
-  findOneByInstanceID(id: string): Promise<Monika | null> {
+  findOneByInstanceID(id: string): Promise<monika | null> {
     return Prisma.monika.findFirst({ where: { instanceId: id } });
   }
 }

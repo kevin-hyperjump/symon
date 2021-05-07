@@ -17,43 +17,17 @@
  *                                                                                *
  **********************************************************************************/
 
-import { Notification } from "@hyperjumptech/monika/lib/interfaces/notification";
-import { Probe } from "@hyperjumptech/monika/lib/interfaces/probe";
+import { monika } from "@prisma/client";
 
-export interface Monika {
-  id: number;
-  config: string;
-  version: string;
-  instanceId: string;
-  ipAddress: string;
-}
+export type MonikaHandshakeCreate = Omit<monika, "id">;
 
-interface MonikaData {
-  id: string;
-  ip_address: string;
-}
-
-interface ConfigData {
-  notifications: Notification[];
-  probes: Probe[];
-}
-
-export interface MonikaHandshake {
-  id: number;
-  version: string;
-  monika: MonikaData;
-  config: ConfigData;
-}
-
-export type MonikaHandshakeCreate = Omit<MonikaHandshake, "id" | "version">;
-
-export type MonikaHandshakeUpdate = Omit<MonikaHandshake, "id" | "version">;
+export type MonikaHandshakeUpdate = Omit<monika, "id">;
 
 export interface Report<T = ReportData> {
   id: number;
   monikaId: number;
   monikaInstanceId: string;
-  monika?: Monika;
+  monika?: monika;
   configVersion: string;
   data: Array<T>;
 }

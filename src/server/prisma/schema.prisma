@@ -58,12 +58,30 @@ model apiKey {
 
 model monika {
   id         Int    @id @default(autoincrement())
-  config     String
-  version    String @unique
+  hostname   String @unique
   instanceId String @map(name: "instance_id")
-  ipAddress  String @map(name: "ip_address")
 
-  report report[]
+  report             report[]
+  monikaProbe        monikaProbe[]
+  monikaNotification monikaNotification[]
+}
+
+model monikaProbe {
+  id       Int  @id @default(autoincrement())
+  monikaId Int? @map(name: "monika_id")
+  probeId  Int? @map("probe_id")
+
+  monika monika? @relation(fields: [monikaId], references: [id])
+  probe  probe?  @relation(fields: [probeId], references: [id])
+}
+
+model monikaNotification {
+  id             Int  @id @default(autoincrement())
+  monikaId       Int? @map(name: "monika_id")
+  notificationId Int? @map(name: "notification_id")
+
+  monika       monika?       @relation(fields: [monikaId], references: [id])
+  notification notification? @relation(fields: [notificationId], references: [id])
 }
 
 model report {
@@ -100,10 +118,12 @@ model notification {
   data      String
   createdAt Int
   updatedAt Int
+
+  monikaNotification monikaNotification[]
 }
 
 model probe {
-  id                Int            @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
   name              String
   description       String?
   alerts            String?
@@ -113,7 +133,9 @@ model probe {
   enabled           Boolean?
   createdAt         Int
   updatedAt         Int
-  requests          probeRequest[]
+
+  requests    probeRequest[]
+  monikaProbe monikaProbe[]
 }
 
 model probeRequest {
@@ -126,5 +148,6 @@ model probeRequest {
   createdAt Int
   updatedAt Int
   probeId   Int?
-  probe     probe?  @relation(fields: [probeId], references: [id])
+
+  probe probe? @relation(fields: [probeId], references: [id])
 }

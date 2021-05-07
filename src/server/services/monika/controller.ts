@@ -30,12 +30,12 @@ export async function createHandshake(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const { data: configData, monika } = req.body;
-
   try {
+    const { hostname, instanceId } = req.body;
+
     const data = await monikaRepository.createHandshake({
-      monika,
-      config: configData,
+      hostname,
+      instanceId,
     });
 
     res.status(201).send({
@@ -44,13 +44,19 @@ export async function createHandshake(
       data,
     });
   } catch (err) {
-    const error = new AppError(
-      commonHTTPErrors.unprocessableEntity,
-      err.message,
-      true,
-    );
+    if (err?.code === "P2002" && err?.meta?.target?.includes("hostname")) {
+      const error = new AppError(commonHTTPErrors.conflict, err.message, true);
 
-    next(error);
+      next(error);
+    } else {
+      const error = new AppError(
+        commonHTTPErrors.unprocessableEntity,
+        err.message,
+        true,
+      );
+
+      next(error);
+    }
   }
 }
 

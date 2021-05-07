@@ -19,19 +19,9 @@
 
 import Joi from "joi";
 
-const handshakeMonikaSchemaValidator = Joi.object().keys({
-  id: Joi.string(),
-  ip_address: Joi.string(),
-});
-
-const handshakeDataSchemaValidator = Joi.object().keys({
-  notifications: Joi.array(),
-  probes: Joi.array(),
-});
-
 const handshakeSchemaValidator = Joi.object().keys({
-  monika: handshakeMonikaSchemaValidator,
-  data: handshakeDataSchemaValidator,
+  hostname: Joi.string(),
+  instanceId: Joi.string(),
 });
 
 export const createHandshakeSchemaValidator = handshakeSchemaValidator;
