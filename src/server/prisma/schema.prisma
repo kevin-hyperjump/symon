@@ -58,7 +58,7 @@ model apiKey {
 
 model monika {
   id         Int    @id @default(autoincrement())
-  hostname   String @unique
+  hostname   String
   instanceId String @map(name: "instance_id")
 
   report             report[]

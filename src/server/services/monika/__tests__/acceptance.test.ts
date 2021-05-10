@@ -59,7 +59,10 @@ describe("Monika Handshake Service", () => {
 
       handshakes.push(createdHandshake);
 
-      return createdHandshake;
+      return {
+        status: 201,
+        data: createdHandshake,
+      };
     };
 
     ApiKeyRepository.prototype.findByApiKey = async () => {

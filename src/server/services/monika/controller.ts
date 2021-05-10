@@ -33,30 +33,27 @@ export async function createHandshake(
   try {
     const { hostname, instanceId } = req.body;
 
-    const data = await monikaRepository.createHandshake({
+    const { status, data } = await monikaRepository.createHandshake({
       hostname,
       instanceId,
     });
 
-    res.status(201).send({
+    res.status(status).send({
       result: "SUCCESS",
-      message: "Successfully create handshake",
+      message:
+        status === 201
+          ? "Successfully create handshake"
+          : "Successfully handshaked",
       data,
     });
   } catch (err) {
-    if (err?.code === "P2002" && err?.meta?.target?.includes("hostname")) {
-      const error = new AppError(commonHTTPErrors.conflict, err.message, true);
+    const error = new AppError(
+      commonHTTPErrors.unprocessableEntity,
+      err.message,
+      true,
+    );
 
-      next(error);
-    } else {
-      const error = new AppError(
-        commonHTTPErrors.unprocessableEntity,
-        err.message,
-        true,
-      );
-
-      next(error);
-    }
+    next(error);
   }
 }
 

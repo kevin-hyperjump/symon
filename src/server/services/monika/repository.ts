@@ -65,7 +65,23 @@ export class ReportRepository {
 }
 
 export class MonikaRepository {
-  async createHandshake(res: MonikaHandshakeCreate): Promise<monika> {
+  async createHandshake(
+    res: MonikaHandshakeCreate,
+  ): Promise<{ status: number; data: monika }> {
+    const handshake = await Prisma.monika.findFirst({
+      where: {
+        hostname: res.hostname,
+        instanceId: res.instanceId,
+      },
+    });
+
+    if (handshake) {
+      return {
+        status: 200,
+        data: handshake,
+      };
+    }
+
     const data = await Prisma.monika.create({
       data: {
         hostname: res.hostname,
@@ -73,7 +89,10 @@ export class MonikaRepository {
       },
     });
 
-    return data;
+    return {
+      status: 201,
+      data,
+    };
   }
 
   findOneByInstanceID(id: string): Promise<monika | null> {
