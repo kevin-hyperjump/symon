@@ -17,50 +17,18 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
-import cors from "cors";
-import swaggerUi from "swagger-ui-express";
-import * as swaggerDocument from "./swagger.json";
+import { Meta } from "@storybook/react";
+import { BrowserRouter } from "react-router-dom";
+import Layout from ".";
 
-import { cfg } from "../config";
-import * as http from "http";
+export default {
+  title: "Layout",
+  component: Layout,
+} as Meta;
 
-import { requestLogger, logger } from "./internal/logger";
-import bodyParser = require("body-parser");
-import errorHandler from "./internal/middleware/error-handler";
-import notFound from "./internal/middleware/not-found";
-import router from "./router";
-
-const app: express.Application = express();
-const port = cfg.port || 8080;
-
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(requestLogger);
-
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use(router);
-
-app.use(errorHandler());
-app.use(notFound());
-
-let server: http.Server;
-(async () => {
-  server = app.listen(port, () => {
-    logger.info(`  Listening on port ${port} in ${cfg.env} mode`);
-    logger.info("  Press CTRL-C to stop\n");
-  });
-})();
-
-const stopServer = async () => {
-  logger.info("  Shutting down the server . . .");
-  if (server.listening) {
-    logger.close();
-    server.close();
-  }
-};
-
-// gracefully shutdown system if these processes is occured
-process.on("SIGINT", stopServer);
-process.on("SIGTERM", stopServer);
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const Default: React.VFC<{}> = () => (
+  <BrowserRouter>
+    <Layout>Content</Layout>
+  </BrowserRouter>
+);

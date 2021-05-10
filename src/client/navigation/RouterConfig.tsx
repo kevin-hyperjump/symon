@@ -19,6 +19,9 @@
 
 import { Switch, Route } from "react-router-dom";
 
+import APIKey from "../pages/api-keys";
+import APIKeyCreate from "../pages/api-keys/create";
+import APIKeyByID from "../pages/api-keys/[id]";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Organization from "../pages/Organization";
@@ -31,6 +34,12 @@ export const RouterConfig = (): JSX.Element => {
     <Switch>
       <Route path="/setup" component={Setup} />
       <Route path="/login" component={Login} />
+      <Route path="/:orgName/:projectID/api-keys" component={APIKey} exact />
+      <Route
+        path="/:orgName/:projectID/api-keys/create"
+        component={APIKeyCreate}
+      />
+      <Route path="/:orgName/:projectID/api-keys/:id" component={APIKeyByID} />
       <Route path="/:orgName/:projectName/:probeName" component={Probe} />
       <Route path="/:orgName/:projectName" component={Project} />
       <Route path="/:orgName" component={Organization} />

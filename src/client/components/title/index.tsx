@@ -17,50 +17,30 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
-import cors from "cors";
-import swaggerUi from "swagger-ui-express";
-import * as swaggerDocument from "./swagger.json";
-
-import { cfg } from "../config";
-import * as http from "http";
-
-import { requestLogger, logger } from "./internal/logger";
-import bodyParser = require("body-parser");
-import errorHandler from "./internal/middleware/error-handler";
-import notFound from "./internal/middleware/not-found";
-import router from "./router";
-
-const app: express.Application = express();
-const port = cfg.port || 8080;
-
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(requestLogger);
-
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use(router);
-
-app.use(errorHandler());
-app.use(notFound());
-
-let server: http.Server;
-(async () => {
-  server = app.listen(port, () => {
-    logger.info(`  Listening on port ${port} in ${cfg.env} mode`);
-    logger.info("  Press CTRL-C to stop\n");
-  });
-})();
-
-const stopServer = async () => {
-  logger.info("  Shutting down the server . . .");
-  if (server.listening) {
-    logger.close();
-    server.close();
-  }
+export type titleProps = {
+  level?: 1 | 2 | 3 | 4 | 5;
+  children: React.ReactNode;
 };
 
-// gracefully shutdown system if these processes is occured
-process.on("SIGINT", stopServer);
-process.on("SIGTERM", stopServer);
+export default function Title({ level, children }: titleProps): JSX.Element {
+  const fontSizeClasses = [
+    { level: 1, className: "text-5xl" },
+    { level: 2, className: "text-4xl" },
+    { level: 3, className: "text-3xl" },
+    { level: 4, className: "text-2xl" },
+    { level: 5, className: "text-xl" },
+  ];
+
+  return (
+    <h1
+      className={`
+        ${
+          fontSizeClasses.find(fsc => fsc.level === level)?.className ??
+          "text-5xl"
+        } font-bold mb-2
+      `}
+    >
+      {children}
+    </h1>
+  );
+}

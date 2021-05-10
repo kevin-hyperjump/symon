@@ -17,50 +17,33 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
-import cors from "cors";
-import swaggerUi from "swagger-ui-express";
-import * as swaggerDocument from "./swagger.json";
+import { Header, Sidebar } from "../";
 
-import { cfg } from "../config";
-import * as http from "http";
-
-import { requestLogger, logger } from "./internal/logger";
-import bodyParser = require("body-parser");
-import errorHandler from "./internal/middleware/error-handler";
-import notFound from "./internal/middleware/not-found";
-import router from "./router";
-
-const app: express.Application = express();
-const port = cfg.port || 8080;
-
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(requestLogger);
-
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use(router);
-
-app.use(errorHandler());
-app.use(notFound());
-
-let server: http.Server;
-(async () => {
-  server = app.listen(port, () => {
-    logger.info(`  Listening on port ${port} in ${cfg.env} mode`);
-    logger.info("  Press CTRL-C to stop\n");
-  });
-})();
-
-const stopServer = async () => {
-  logger.info("  Shutting down the server . . .");
-  if (server.listening) {
-    logger.close();
-    server.close();
-  }
+type LayoutProps = {
+  children?: React.ReactNode;
+  isLoading?: boolean;
 };
 
-// gracefully shutdown system if these processes is occured
-process.on("SIGINT", stopServer);
-process.on("SIGTERM", stopServer);
+export default function Layout({
+  children,
+  isLoading,
+}: LayoutProps): JSX.Element {
+  if (isLoading) {
+    return <Content>Loading...</Content>;
+  }
+  return <Content>{children}</Content>;
+}
+
+function Content({ children }: LayoutProps): JSX.Element {
+  return (
+    <main className="flex items-start justify-between overflow-hidden">
+      <Sidebar />
+      <div className="w-full sm:w-9/12 xl:w-10/12">
+        <Header />
+        <div className="container mx-auto px-4 py-5 sm:px-6 lg:px-7">
+          {children}
+        </div>
+      </div>
+    </main>
+  );
+}

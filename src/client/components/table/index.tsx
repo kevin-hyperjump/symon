@@ -17,50 +17,59 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
-import cors from "cors";
-import swaggerUi from "swagger-ui-express";
-import * as swaggerDocument from "./swagger.json";
-
-import { cfg } from "../config";
-import * as http from "http";
-
-import { requestLogger, logger } from "./internal/logger";
-import bodyParser = require("body-parser");
-import errorHandler from "./internal/middleware/error-handler";
-import notFound from "./internal/middleware/not-found";
-import router from "./router";
-
-const app: express.Application = express();
-const port = cfg.port || 8080;
-
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(requestLogger);
-
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use(router);
-
-app.use(errorHandler());
-app.use(notFound());
-
-let server: http.Server;
-(async () => {
-  server = app.listen(port, () => {
-    logger.info(`  Listening on port ${port} in ${cfg.env} mode`);
-    logger.info("  Press CTRL-C to stop\n");
-  });
-})();
-
-const stopServer = async () => {
-  logger.info("  Shutting down the server . . .");
-  if (server.listening) {
-    logger.close();
-    server.close();
-  }
+type column = {
+  title: string;
+  key: string;
+  render?: (data: any, dataSource: any) => React.ReactNode;
 };
 
-// gracefully shutdown system if these processes is occured
-process.on("SIGINT", stopServer);
-process.on("SIGTERM", stopServer);
+export type tableProps = {
+  isLoading?: boolean;
+  dataSource?: any[];
+  columns?: column[];
+};
+
+export default function Table({
+  isLoading = false,
+  dataSource,
+  columns,
+}: tableProps): JSX.Element {
+  if (isLoading) {
+    return <>Loading...</>;
+  }
+
+  return (
+    <div className="min-w-full">
+      <table className="block overflow-x-scroll divide-y divide-gray-200">
+        <thead className="bg-gray-50 border-t border-b border-gray-300">
+          <tr>
+            {columns?.map(column => (
+              <th
+                key={column.key}
+                className="px-6 py-3 text-left text-2xl text-gray-400 tracking-wider w-full"
+              >
+                {column.title}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {dataSource?.map(row => (
+            <tr key={row.key}>
+              {columns?.map(column => (
+                <td
+                  key={column.key}
+                  className="px-6 py-4 whitespace-nowrap text-2xl text-gray-500"
+                >
+                  {column?.render
+                    ? column.render(row[column.key], row)
+                    : row[column.key]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

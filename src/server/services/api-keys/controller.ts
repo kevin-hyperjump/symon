@@ -62,17 +62,55 @@ export async function index(
   }
 }
 
+export async function show(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const id = parseInt(req.params.id, 10);
+
+  try {
+    const data = await repo.findById(id);
+
+    if (!data) {
+      const error = new AppError(
+        commonHTTPErrors.notFound,
+        "API Key is not found",
+        true,
+      );
+
+      next(error);
+      return;
+    }
+
+    res.status(200).send({
+      result: "SUCCESS",
+      message: "Successfully get API Key",
+      data,
+    });
+  } catch (err) {
+    const error = new AppError(
+      commonHTTPErrors.unprocessableEntity,
+      err.message,
+      true,
+    );
+
+    next(error);
+  }
+}
+
 export async function create(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const { projectID } = req?.body;
+  const { projectID, name } = req?.body;
   const timeNowUnix = getUnixTimestamp();
 
   try {
     const data = await repo.create({
       projectID,
+      name,
       apiKey: uuid(),
       isEnabled: true,
       createdAt: timeNowUnix,

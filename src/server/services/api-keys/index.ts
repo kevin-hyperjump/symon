@@ -20,12 +20,13 @@
 import { Router } from "express";
 
 import validate from "../../internal/middleware/validator";
-import { index, create, update, destroy } from "./controller";
+import { index, show, create, update, destroy } from "./controller";
 import { createValidator, updateValidator } from "./validator";
 
 const router = Router();
 
 router.get("/v1/projects/:id/api-keys", index);
+router.get("/v1/api-keys/:id", show);
 router.post("/v1/api-keys", validate(createValidator), create);
 router.put("/v1/api-keys/:id", validate(updateValidator), update);
 router.delete("/v1/api-keys/:id", destroy);

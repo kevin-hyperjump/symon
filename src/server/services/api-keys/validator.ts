@@ -17,10 +17,11 @@
  *                                                                                *
  **********************************************************************************/
 
-import { object, bool, number } from "joi";
+import { object, bool, number, string } from "joi";
 
 export const createValidator = object().keys({
   projectID: number().required().label("Project ID"),
+  name: string().required().label("API Key Name"),
 });
 
 export const updateValidator = object().keys({

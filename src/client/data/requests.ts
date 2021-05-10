@@ -25,10 +25,10 @@ const apiPrefix = cfg.apiPrefix;
 const baseURL = apiURL + apiPrefix;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fetcher = async <T = any>(
+export const fetcher = async <T = any>(
   path: string,
   option: {
-    body: unknown;
+    body?: unknown;
     method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   },
 ): Promise<T> => {

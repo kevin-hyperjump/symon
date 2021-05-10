@@ -33,6 +33,7 @@ let apiKeys: apiKey[] = [
   {
     id: 1,
     projectID: 1,
+    name: "EC2 AWS Jakarta",
     apiKey: faker.random.uuid(),
     isEnabled: true,
     createdAt: faker.time.recent(),
@@ -43,6 +44,7 @@ let apiKeys: apiKey[] = [
   {
     id: 2,
     projectID: 1,
+    name: "EC2 AWS Singapore",
     apiKey: faker.random.uuid(),
     isEnabled: false,
     createdAt: faker.time.recent(),
@@ -179,6 +181,7 @@ describe("API Key Service", () => {
       // arrange
       const mockData = {
         projectID: 1,
+        name: "GCP Jakarta",
       };
 
       // act
@@ -212,6 +215,7 @@ describe("API Key Service", () => {
       // act
       const res = await request(app).post("/v1/api-keys").send({
         projectID: 1,
+        name: "EC2 AWS Hongkong",
       });
 
       // assert

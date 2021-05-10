@@ -69,6 +69,7 @@ describe("Monika Handshake Service", () => {
       const data = {
         id: 1,
         projectID: 1,
+        name: "EC2 AWS Jakarta",
         apiKey: "123",
         isEnabled: true,
         createdBy: "1",

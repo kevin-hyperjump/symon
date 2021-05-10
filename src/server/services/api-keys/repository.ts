@@ -54,6 +54,7 @@ export class Repository {
     const result = await Prisma.apiKey.create({
       data: {
         projectID: data.projectID,
+        name: data.name,
         apiKey: data.apiKey,
         isEnabled: data.isEnabled,
         createdAt: data.createdAt,

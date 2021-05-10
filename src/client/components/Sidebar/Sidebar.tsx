@@ -46,7 +46,7 @@ export const SidebarView: FC<SidebarViewProps> = ({
   itemsGroups = [],
 }) => {
   return (
-    <aside className="relative min-h-screen w-64 p-6 pb-24 bg-bw-dark text-white text-lg">
+    <aside className="relative min-h-screen sm:block sm:w-3/12 xl:w-2/12 p-6 pb-24 bg-bw-dark text-white text-lg">
       <div className="w-28 mt-2 mb-8">
         <Logo transparent />
       </div>

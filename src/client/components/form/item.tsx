@@ -17,50 +17,44 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
-import cors from "cors";
-import swaggerUi from "swagger-ui-express";
-import * as swaggerDocument from "./swagger.json";
+import { ReactNode } from "react";
 
-import { cfg } from "../config";
-import * as http from "http";
-
-import { requestLogger, logger } from "./internal/logger";
-import bodyParser = require("body-parser");
-import errorHandler from "./internal/middleware/error-handler";
-import notFound from "./internal/middleware/not-found";
-import router from "./router";
-
-const app: express.Application = express();
-const port = cfg.port || 8080;
-
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(requestLogger);
-
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use(router);
-
-app.use(errorHandler());
-app.use(notFound());
-
-let server: http.Server;
-(async () => {
-  server = app.listen(port, () => {
-    logger.info(`  Listening on port ${port} in ${cfg.env} mode`);
-    logger.info("  Press CTRL-C to stop\n");
-  });
-})();
-
-const stopServer = async () => {
-  logger.info("  Shutting down the server . . .");
-  if (server.listening) {
-    logger.close();
-    server.close();
-  }
+export type itemProps = {
+  label?: string;
+  name?: string;
+  children?: ReactNode;
+  layout?: "vertical" | "horizontal";
 };
 
-// gracefully shutdown system if these processes is occured
-process.on("SIGINT", stopServer);
-process.on("SIGTERM", stopServer);
+export default function Item({
+  label,
+  name,
+  children,
+  layout,
+}: itemProps): JSX.Element {
+  if (layout === "vertical") {
+    return (
+      <div className="pb-6 pt-7">
+        <label
+          className="block mb-5 text-sm sm:text-2xl text-gray-500"
+          htmlFor={name}
+        >
+          {label}
+        </label>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <div className="block pt-7 md:flex">
+      <label
+        className="text-sm sm:text-2xl md:mr-6 sm:leading-10 text-gray-500"
+        htmlFor={name}
+      >
+        {label}
+      </label>
+      <div className="md:w-full">{children}</div>
+    </div>
+  );
+}

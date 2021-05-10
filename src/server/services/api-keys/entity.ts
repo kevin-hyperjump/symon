@@ -20,6 +20,7 @@
 export type APIKey = {
   id: number;
   projectID: number;
+  name: string;
   apiKey: string;
   isEnabled: boolean;
   createdAt: number;

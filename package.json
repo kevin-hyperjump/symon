@@ -26,8 +26,9 @@
     "test:server:watch": "jest --config src/server/jest.config.js --watch",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
-    "cypress:open": "npx cypress open",
-    "seed": "cd src/server && npx prisma db seed --preview-feature && cd ../../../"
+    "cypress:open": "cypress open",
+    "migrate": "prisma migrate dev --preview-feature && prisma generate",
+    "seed": "cd src/server && prisma db seed --preview-feature && cd ../../../"
   },
   "repository": {
     "type": "git",
@@ -42,6 +43,8 @@
     "@prisma/client": "2.15.0",
     "argon2": "^0.27.1",
     "body-parser": "1.19.0",
+    "cors": "2.8.5",
+    "date-fns": "2.21.2",
     "dotenv": "^8.2.0",
     "express": "~4.17.1",
     "express-winston": "^4.0.5",
@@ -69,6 +72,7 @@
     "@tailwindcss/forms": "^0.2.1",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.3",
+    "@types/cors": "^2.8.10",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.11",
     "@types/express-winston": "^4.0.0",

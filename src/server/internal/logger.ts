@@ -17,33 +17,49 @@
  *                                                                                *
  **********************************************************************************/
 
-import winston from "winston";
+import winston, { format } from "winston";
 import expressWinston from "express-winston";
 import { cfg } from "../../config";
 
-const transports = [
+const { combine, timestamp, json, simple, colorize, printf } = format;
+const productionTransports = [
   new winston.transports.Console({
-    level: cfg.env === "production" ? "info" : "debug",
+    level: "info",
+    format: combine(
+      timestamp({
+        format: "YYYY-MM-DD HH:mm:ss",
+      }),
+      json(),
+    ),
   }),
 ];
-
+const devTransports = [
+  new winston.transports.Console({
+    level: "debug",
+    format: combine(
+      timestamp({
+        format: "YYYY-MM-DD HH:mm:ss",
+      }),
+      simple(),
+      printf(msg =>
+        colorize().colorize(
+          msg.level,
+          `${msg.timestamp} ${msg.level} ${msg.message}`,
+        ),
+      ),
+    ),
+  }),
+];
+const transports =
+  cfg.env === "production" ? productionTransports : devTransports;
 const options: winston.LoggerOptions = {
   transports,
 };
 
 export const requestLogger = expressWinston.logger({
   transports,
-  format: winston.format.combine(winston.format.json()),
   expressFormat: true,
-  colorize: false,
   level: "debug",
-});
-
-export const expressErrorLogger = expressWinston.errorLogger({
-  transports,
-  format: winston.format.combine(winston.format.json()),
-  msg:
-    "{{err.message}} {{res.statusCode}} {{req.method}} with error: {{err}} and request: {{req}} and response: {{res}}",
 });
 
 export const logger = winston.createLogger(options);
