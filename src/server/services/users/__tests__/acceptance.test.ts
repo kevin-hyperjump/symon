@@ -17,7 +17,7 @@
  *                                                                                *
  **********************************************************************************/
 
-import bodyParser from "body-parser";
+import { user } from "@prisma/client";
 import express from "express";
 import faker from "faker";
 import request from "supertest";
@@ -26,11 +26,11 @@ import { setupPassportJwt } from "../../../config/passport";
 import errorHandler from "../../../internal/middleware/error-handler";
 import authMiddleware from "../../auth/middleware";
 import { generateMockJWT } from "../../auth/__tests__/acceptance.test";
-import { User, UserCreate, UserUpdate } from "../entity";
-import user from "../index";
+import { UserCreate, UserUpdate } from "../entity";
+import userService from "../index";
 import { UserRepository } from "../repository";
 
-let users: User[] = [
+let users: user[] = [
   {
     id: 1,
     email: faker.internet.email(),
@@ -50,8 +50,8 @@ let users: User[] = [
 
 describe("User Service", () => {
   const app = express();
-  app.use(bodyParser.json());
-  app.use(user);
+  app.use(express.json());
+  app.use(userService);
   app.use(errorHandler());
 
   beforeEach(function () {
@@ -118,7 +118,7 @@ describe("User Service", () => {
     });
 
     it("should return http status code 422", async done => {
-      UserRepository.prototype.findMany = async (): Promise<User[]> => {
+      UserRepository.prototype.findMany = async (): Promise<user[]> => {
         throw new Error("query error");
       };
 
@@ -211,8 +211,8 @@ describe("User Service", () => {
   describe("PUT /v1/users/:id", () => {
     it("should return http status code 200", async done => {
       const res = await request(app).put("/v1/users/2").send({
-        enabled: 1,
-        suspended: 0,
+        password: "abc",
+        passwordConfirmation: "abc",
       });
 
       expect(res.status).toBe(200);
@@ -222,9 +222,8 @@ describe("User Service", () => {
 
     it("should return http status code 400", async done => {
       const res = await request(app).put("/v1/users/2").send({
-        id: 2,
-        enabled: 1,
-        suspended: 0,
+        password: "abc",
+        passwordConfirmation: "ab",
       });
 
       expect(res.status).toBe(400);
@@ -237,9 +236,11 @@ describe("User Service", () => {
       };
 
       const res = await request(app).put("/v1/users/2").send({
-        enabled: 1,
-        suspended: 0,
+        password: "abc",
+        passwordConfirmation: "abc",
       });
+
+      console.log("res", res);
 
       expect(res.status).toBe(422);
       done();
@@ -274,9 +275,9 @@ describe("User Service", () => {
 
 describe("User Service with Auth Middleware", () => {
   const app = express();
-  app.use(bodyParser.json());
+  app.use(express.json());
   app.use(authMiddleware);
-  app.use(user);
+  app.use(userService);
   app.use(errorHandler());
 
   describe("GET /v1/users", () => {

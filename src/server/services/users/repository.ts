@@ -18,11 +18,13 @@
  **********************************************************************************/
 
 import argon2 from "argon2";
-import { User, UserCreate, UserUpdate } from "./entity";
+
+import { user } from "@prisma/client";
 
 import Prisma from "../../prisma/prisma-client";
+import { UserCreate, UserUpdate } from "./entity";
 
-type UserResponse = Omit<User, "password_hash">;
+type UserResponse = Omit<user, "password_hash">;
 
 export class UserRepository {
   private selectedFields = {
@@ -63,7 +65,7 @@ export class UserRepository {
     return data;
   }
 
-  async findOneByEmail(email: string): Promise<User | null> {
+  async findOneByEmail(email: string): Promise<user | null> {
     const data = await Prisma.user.findUnique({
       where: { email },
     });
@@ -85,11 +87,19 @@ export class UserRepository {
     return data;
   }
 
-  async update(id: number, res: UserUpdate): Promise<UserResponse> {
+  async update(
+    id: number,
+    { password, ...res }: UserUpdate,
+  ): Promise<UserResponse> {
+    const passwordHashed = await this.generatePasswordHash(password);
+
     const data = await Prisma.user.update({
       select: this.selectedFields,
       where: { id },
-      data: res,
+      data: {
+        ...res,
+        password_hash: passwordHashed,
+      },
     });
 
     return data;

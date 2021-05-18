@@ -17,16 +17,17 @@
  *                                                                                *
  **********************************************************************************/
 
-import { Switch, Route } from "react-router-dom";
+import { Route, Switch } from "react-router-dom";
 
+import Account from "../pages/account";
 import APIKey from "../pages/api-keys";
-import APIKeyCreate from "../pages/api-keys/create";
 import APIKeyByID from "../pages/api-keys/[id]";
+import APIKeyCreate from "../pages/api-keys/create";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Organization from "../pages/Organization";
-import Project from "../pages/Project";
 import Probe from "../pages/Probe";
+import Project from "../pages/Project";
 import Setup from "../pages/Setup";
 
 export const RouterConfig = (): JSX.Element => {
@@ -34,6 +35,7 @@ export const RouterConfig = (): JSX.Element => {
     <Switch>
       <Route path="/setup" component={Setup} />
       <Route path="/login" component={Login} />
+      <Route path="/account" component={Account} />
       <Route path="/:orgName/:projectID/api-keys" component={APIKey} exact />
       <Route
         path="/:orgName/:projectID/api-keys/create"

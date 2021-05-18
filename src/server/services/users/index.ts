@@ -28,7 +28,12 @@ const router = express.Router();
 router.get("/v1/users", findMany);
 router.get("/v1/users/:id", findOneByID);
 router.post("/v1/users", validate(createSchemaValidator), create);
-router.put("/v1/users/:id", validate(updateSchemaValidator), update);
 router.delete("/v1/users/:id", destroy);
+
+// Update current logged user
+router.put("/v1/users", validate(updateSchemaValidator), update);
+
+// Update specific user by its ID
+router.put("/v1/users/:id", validate(updateSchemaValidator), update);
 
 export default router;

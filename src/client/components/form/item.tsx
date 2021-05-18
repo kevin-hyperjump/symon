@@ -34,11 +34,8 @@ export default function Item({
 }: itemProps): JSX.Element {
   if (layout === "vertical") {
     return (
-      <div className="pb-6 pt-7">
-        <label
-          className="block mb-5 text-sm sm:text-2xl text-gray-500"
-          htmlFor={name}
-        >
+      <div className="pb-6">
+        <label className="block mb-3 text-md text-gray-500" htmlFor={name}>
           {label}
         </label>
         {children}
@@ -47,9 +44,9 @@ export default function Item({
   }
 
   return (
-    <div className="block pt-7 md:flex">
+    <div className="block pb-6 md:flex">
       <label
-        className="text-sm sm:text-2xl md:mr-6 sm:leading-10 text-gray-500"
+        className="text-md md:mr-6 sm:leading-10 text-gray-500"
         htmlFor={name}
       >
         {label}

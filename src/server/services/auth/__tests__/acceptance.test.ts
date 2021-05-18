@@ -17,19 +17,19 @@
  *                                                                                *
  **********************************************************************************/
 
-import bodyParser from "body-parser";
 import express from "express";
 import jwt from "jsonwebtoken";
 import request from "supertest";
 
+import { user } from "@prisma/client";
+
+import { cfg } from "../../../../config/index";
 import { setupPassport } from "../../../config/passport";
 import errorHandler from "../../../internal/middleware/error-handler";
-import { User } from "../../users/entity";
 import { UserRepository } from "../../users/repository";
 import auth from "../index";
-import { cfg } from "../../../../config/index";
 
-const users: User[] = [
+const users: user[] = [
   {
     id: 1,
     email: "foo@bar.com",
@@ -86,7 +86,7 @@ export function generateMockJWT(
 describe("Auth Service", () => {
   // arrange
   const app = express();
-  app.use(bodyParser.json());
+  app.use(express.json());
   app.use(auth);
   app.use(errorHandler());
 

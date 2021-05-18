@@ -17,16 +17,12 @@
  *                                                                                *
  **********************************************************************************/
 
-export interface User {
-  id: number;
-  email: string;
-  password_hash: string;
-  enabled: number;
-  suspended: number;
-}
+import { user } from "@prisma/client";
 
-export type UserCreate = Omit<User, "id" | "password_hash"> & {
+export type UserCreate = Omit<user, "id" | "password_hash"> & {
   password: string;
 };
 
-export type UserUpdate = Pick<User, "enabled" | "suspended">;
+export type UserUpdate = Pick<user, "email"> & {
+  password: string;
+};

@@ -25,6 +25,9 @@ export const createSchemaValidator = Joi.object().keys({
 });
 
 export const updateSchemaValidator = Joi.object().keys({
-  enabled: Joi.number().allow(0, 1).required().label("Enabled"),
-  suspended: Joi.number().allow(0, 1).required().label("Suspended"),
+  email: Joi.string().label("Email"),
+  password: Joi.string().label("Password"),
+  passwordConfirmation: Joi.string()
+    .equal(Joi.ref("password"))
+    .label("Password Confirmation"),
 });

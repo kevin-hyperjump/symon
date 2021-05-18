@@ -19,6 +19,8 @@
 
 import { NextFunction, Request, Response } from "express";
 
+import { user } from "@prisma/client";
+
 import { AppError, commonHTTPErrors } from "../../internal/app-error";
 import { UserRepository } from "./repository";
 
@@ -135,11 +137,16 @@ export async function update(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const id = parseInt(req.params.id, 10);
-  const { enabled, suspended } = req.body;
+  const id = req.params.id
+    ? parseInt(req.params.id, 10)
+    : (req.user as user)?.id;
+  const { email, password } = req.body;
 
   try {
-    const data = await repository.update(id, { enabled, suspended });
+    const data = await repository.update(id, {
+      email,
+      password,
+    });
 
     res.status(200).send({
       result: "SUCCESS",
