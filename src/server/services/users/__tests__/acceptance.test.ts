@@ -240,8 +240,6 @@ describe("User Service", () => {
         passwordConfirmation: "abc",
       });
 
-      console.log("res", res);
-
       expect(res.status).toBe(422);
       done();
     });
