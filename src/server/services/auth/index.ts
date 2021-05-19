@@ -18,11 +18,19 @@
  **********************************************************************************/
 
 import express from "express";
-import { login, refresh } from "./controller";
+import validate from "../../internal/middleware/validator";
+import { createSchemaValidator } from "../users/validator";
+import { login, refresh, checkHasUser, createFirstUser } from "./controller";
+import {
+  loginRequesBodytValidator,
+  refreshRequestBodyValidator,
+} from "./validator";
 
 const router = express.Router();
 
-router.post("/v1/auth", login);
-router.post("/v1/refresh", refresh);
+router.get("/v1/auth/check-users", checkHasUser);
+router.post("/v1/auth", validate(loginRequesBodytValidator), login);
+router.post("/v1/auth/user", validate(createSchemaValidator), createFirstUser);
+router.post("/v1/refresh", validate(refreshRequestBodyValidator), refresh);
 
 export default router;

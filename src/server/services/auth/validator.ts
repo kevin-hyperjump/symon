@@ -17,60 +17,13 @@
  *                                                                                *
  **********************************************************************************/
 
-import { useMutation, UseMutationResult } from "react-query";
+import Joi from "joi";
 
-import { post } from "./requests";
+export const loginRequesBodytValidator = Joi.object().keys({
+  email: Joi.string().required(),
+  password: Joi.string().required(),
+});
 
-type UseLoginData = {
-  result: string;
-  message: string;
-  data: {
-    accessToken: string;
-    refreshToken: string;
-  };
-};
-
-type UseLoginVariables = { email: string; password: string };
-
-export const useLogin = (): UseMutationResult<
-  UseLoginData,
-  Error,
-  UseLoginVariables,
-  unknown
-> => {
-  return useMutation(async variables => post("/auth", { body: variables }), {
-    onSuccess(response) {
-      setToken(response.data);
-    },
-    onError() {
-      // do nothing
-    },
-  });
-};
-
-export const setToken = (data: {
-  accessToken: string;
-  refreshToken: string;
-}): void => {
-  const { accessToken, refreshToken } = data;
-
-  if (accessToken) {
-    window.localStorage.setItem("at", accessToken);
-    if (refreshToken) {
-      window.localStorage.setItem("rt", refreshToken);
-    }
-  } else {
-    window.localStorage.removeItem("at");
-    window.localStorage.removeItem("rt");
-  }
-};
-
-export const getSavedTokens = (): {
-  accessToken: string;
-  refreshToken: string;
-} => {
-  return {
-    accessToken: window.localStorage.getItem("at") || "",
-    refreshToken: window.localStorage.getItem("rt") || "",
-  };
-};
+export const refreshRequestBodyValidator = Joi.object().keys({
+  refreshToken: Joi.string().required(),
+});

@@ -190,7 +190,7 @@ describe("Auth Service", () => {
       });
 
       // assert
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(400);
       done();
     });
 
@@ -201,7 +201,7 @@ describe("Auth Service", () => {
       });
 
       // assert
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(400);
       done();
     });
 

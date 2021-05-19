@@ -17,12 +17,14 @@
  *                                                                                *
  **********************************************************************************/
 
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
+import { useQuery } from "react-query";
 import { useHistory } from "react-router-dom";
 
 import Button from "../../components/Button";
 import Header from "../../components/Header";
 import Input from "../../components/Input";
+import { fetcher } from "../../data/requests";
 import { useLogin } from "../../data/user";
 
 export const Login: FC = () => {
@@ -33,28 +35,79 @@ export const Login: FC = () => {
     password: "",
     remember: false,
   });
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const { mutate: login, isLoading } = useLogin();
+
+  const { data: checkUserData } = useQuery("checkUsers", () =>
+    fetcher(`/auth/check-users`, {
+      method: "GET",
+    }),
+  );
+
+  useEffect(() => {
+    const rememberMeStoredValue = window.localStorage.getItem("rememberMe");
+    const remember = rememberMeStoredValue === "true" ? true : false;
+    const accessToken = window.localStorage.getItem("at");
+
+    if (remember && !!accessToken) {
+      history.replace("/");
+    } else {
+      setData(prev => ({
+        ...prev,
+        remember,
+      }));
+    }
+  }, [history]);
+
+  const doLogin = () => {
+    login(
+      { email: data.email, password: data.password },
+      {
+        onSuccess() {
+          history.replace("/");
+        },
+        onError(error) {
+          setErrorMessage(error.message);
+        },
+      },
+    );
+  };
+
+  const createFirstUser = async () => {
+    try {
+      const response = await fetcher(`/auth/user`, {
+        method: "POST",
+        body: { email: data.email, password: data.password },
+      });
+
+      if (response.data) {
+        doLogin();
+      }
+    } catch (error) {
+      setErrorMessage(error?.message);
+    }
+  };
 
   return (
     <LoginView
       data={data}
       onChangeData={(field, value) => {
+        setErrorMessage("");
         setData(prev => ({
           ...prev,
           [field]: value,
         }));
       }}
       isLoading={isLoading}
+      errorMessage={errorMessage}
+      hasUser={checkUserData?.hasUser}
       onSubmit={() => {
-        login(
-          { email: data.email, password: data.password },
-          {
-            onSuccess() {
-              history.replace("/");
-            },
-          },
-        );
+        if (checkUserData?.hasUser) {
+          doLogin();
+        } else {
+          createFirstUser();
+        }
       }}
     />
   );
@@ -70,6 +123,8 @@ export interface LoginViewProps {
   data?: LoginFormData;
   onChangeData?(field: string, value: unknown): void;
   isLoading?: boolean;
+  errorMessage?: string;
+  hasUser?: boolean;
   onSubmit?(): void;
 }
 
@@ -77,6 +132,8 @@ export const LoginView: FC<LoginViewProps> = ({
   data = { email: "", password: "", remember: false },
   onChangeData,
   isLoading = false,
+  errorMessage,
+  hasUser,
   onSubmit,
 }) => (
   <div>
@@ -90,7 +147,9 @@ export const LoginView: FC<LoginViewProps> = ({
         }}
       >
         <div className="w-10/12 mx-auto pt-10 pb-12">
-          <div className="mb-6 font-bold">Login</div>
+          <div className="mb-6 font-bold">
+            {hasUser ? "Login" : "Create new user"}
+          </div>
           <div className="flex justify-end items-center mb-4">
             <label
               htmlFor="email"
@@ -104,6 +163,8 @@ export const LoginView: FC<LoginViewProps> = ({
                 autoComplete="email"
                 value={data.email}
                 onChange={e => onChangeData?.("email", e.target.value)}
+                type="email"
+                required
               />
             </div>
           </div>
@@ -120,26 +181,47 @@ export const LoginView: FC<LoginViewProps> = ({
                 type="password"
                 value={data.password}
                 onChange={e => onChangeData?.("password", e.target.value)}
+                required
               />
             </div>
           </div>
-          <div className="flex items-center justify-between ml-24 font-light text-gray-500 mb-8">
-            <div className="flex items-center">
-              <input
-                id="remember"
-                name="remember"
-                type="checkbox"
-                className="h-4 w-4 focus:ring-transparent text-bw border-gray-300 rounded"
-                checked={data.remember}
-                onChange={e => onChangeData?.("remember", e.target.checked)}
-              />
-              <label htmlFor="remember" className="ml-2 block text-sm">
-                Remember me
-              </label>
+          {hasUser && (
+            <div className="flex items-center justify-between ml-24 font-light text-gray-500 mb-8">
+              <div className="flex items-center">
+                <input
+                  id="remember"
+                  name="remember"
+                  type="checkbox"
+                  className="h-4 w-4 focus:ring-transparent text-bw border-gray-300 rounded"
+                  checked={data.remember}
+                  onChange={e => {
+                    const isChecked = e.target.checked;
+                    window.localStorage.setItem(
+                      "rememberMe",
+                      isChecked === true ? "true" : "false",
+                    );
+                    onChangeData?.("remember", isChecked);
+                  }}
+                />
+                <label htmlFor="remember" className="ml-2 block text-sm">
+                  Remember me
+                </label>
+              </div>
             </div>
-          </div>
+          )}
           <div className="ml-24">
-            <Button label="Login" type="submit" disabled={isLoading} />
+            {!!errorMessage && (
+              <p className="text-red-500 mb-4">{errorMessage}</p>
+            )}
+            {isLoading ? (
+              "Loading..."
+            ) : (
+              <Button
+                label={hasUser ? "Login" : "Create"}
+                type="submit"
+                disabled={isLoading}
+              />
+            )}
           </div>
         </div>
       </form>
