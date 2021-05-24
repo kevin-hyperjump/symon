@@ -20,23 +20,34 @@
 import { Story, Meta } from "@storybook/react/types-6-0";
 import { BrowserRouter as Router } from "react-router-dom";
 
-import { SidebarView, SidebarViewProps } from "./Sidebar";
+import { Sidebar, SidebarProps } from "./Sidebar";
 
 export default {
   title: "Sidebar",
-  component: SidebarView,
+  component: Sidebar,
 } as Meta;
 
-const Template: Story<SidebarViewProps> = args => (
+const Template: Story<SidebarProps> = args => (
   <Router>
-    <SidebarView {...args} />
+    <Sidebar {...args} />
   </Router>
 );
 
 export const Default = Template.bind({});
+
 Default.args = {
-  orgName: "hyperjump",
-  user: {
-    fullName: "Nico Prananta",
-  },
+  endpoints: [
+    {
+      to: "/1",
+      title: "http://endpoint1.com",
+    },
+    {
+      to: "/2",
+      title: "http://endpoint2.com",
+    },
+    {
+      to: "/3",
+      title: "http://endpoint2.com",
+    },
+  ],
 };
