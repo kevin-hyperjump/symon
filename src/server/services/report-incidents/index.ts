@@ -17,50 +17,11 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
+import { Router } from "express";
+import { index } from "./controller";
 
-import apiKeys from "./services/api-keys";
-import auth from "./services/auth";
-import authMiddleware from "./services/auth/middleware";
-import locations from "./services/locations";
-import monika from "./services/monika";
-import probes from "./services/probes";
-import notifications from "./services/notifications";
-import organizations from "./services/organizations";
-import projects from "./services/projects";
-import reportRequests from "./services/report-requests";
-import reportAlerts from "./services/report-alerts";
-import reportIncidents from "./services/report-incidents";
-import users from "./services/users";
+const router = Router();
 
-const router = express.Router();
-
-router.get("/", (_, res) => {
-  res.send("Hello World!");
-});
-
-router.use(auth);
-router.use(monika);
-
-router.use(authMiddleware);
-
-// ********************************
-// Protected Endpoints ************
-// ********************************
-
-router.use(users);
-router.use(probes);
-router.use(notifications);
-router.use(organizations);
-router.use(locations);
-router.use(projects);
-router.use(reportIncidents);
-router.use(reportRequests);
-router.use(reportAlerts);
-router.use(apiKeys);
-
-// ********************************
-// End of Protected Endpoints *****
-// ********************************
+router.get("/v1/report-incidents", index);
 
 export default router;

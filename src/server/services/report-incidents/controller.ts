@@ -17,50 +17,49 @@
  *                                                                                *
  **********************************************************************************/
 
-import express from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError, commonHTTPErrors } from "../../internal/app-error";
+import { generatePrismaArguments } from "../../internal/query-helper";
+import PrismaClient from "../../prisma/prisma-client";
 
-import apiKeys from "./services/api-keys";
-import auth from "./services/auth";
-import authMiddleware from "./services/auth/middleware";
-import locations from "./services/locations";
-import monika from "./services/monika";
-import probes from "./services/probes";
-import notifications from "./services/notifications";
-import organizations from "./services/organizations";
-import projects from "./services/projects";
-import reportRequests from "./services/report-requests";
-import reportAlerts from "./services/report-alerts";
-import reportIncidents from "./services/report-incidents";
-import users from "./services/users";
+export async function index(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const { query } = req;
 
-const router = express.Router();
+  try {
+    const prismaModelQueries = generatePrismaArguments({
+      searchableFields: ["type"],
+      queryArgs: {
+        fields: query?.fields as string,
+        filter: query?.filter as string,
+        limit: query?.limit as string,
+        cursor: query?.cursor as string,
+        search: query?.search as string,
+        sort: query?.sort as string,
+      },
+    });
+    const data = await PrismaClient.reportNotifications.findMany({
+      ...prismaModelQueries,
+      where: {
+        ...prismaModelQueries.where,
+        type: "NOTIFY-INCIDENT",
+      },
+    });
 
-router.get("/", (_, res) => {
-  res.send("Hello World!");
-});
+    res.status(200).send({
+      message: "Successfully get list of report incidents",
+      data,
+    });
+  } catch (err) {
+    const error = new AppError(
+      commonHTTPErrors.unprocessableEntity,
+      err.message,
+      true,
+    );
 
-router.use(auth);
-router.use(monika);
-
-router.use(authMiddleware);
-
-// ********************************
-// Protected Endpoints ************
-// ********************************
-
-router.use(users);
-router.use(probes);
-router.use(notifications);
-router.use(organizations);
-router.use(locations);
-router.use(projects);
-router.use(reportIncidents);
-router.use(reportRequests);
-router.use(reportAlerts);
-router.use(apiKeys);
-
-// ********************************
-// End of Protected Endpoints *****
-// ********************************
-
-export default router;
+    next(error);
+  }
+}

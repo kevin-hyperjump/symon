@@ -106,6 +106,22 @@ async function main() {
   }
   await Promise.all(reportRequestsAlertsSeed);
 
+  const reportNotificationsSeed = [];
+  for (let i = 0; i < 35; i++) {
+    reportNotificationsSeed[i] = prisma.reportNotifications.create({
+      data: {
+        timestamp: 0,
+        type: i % 2 === 0 ? "NOTIFY-INCIDENT" : "NOTIFY-RECOVERY",
+        alert: "response-time-greater-than-2-s",
+        reportId: 1,
+        probeId: "sample-probe",
+        notificationId: "sample-notification",
+        channel: "slack",
+      },
+    });
+  }
+  await Promise.all(reportNotificationsSeed);
+
   const configs = [
     { key: "env", value: "development" },
     { key: "jwtSecret", value: "8080" },
@@ -128,6 +144,7 @@ async function main() {
     });
   });
 }
+
 main()
   .catch(e => {
     console.error(e);

@@ -22,6 +22,7 @@ import { Redirect, useHistory, useParams } from "react-router-dom";
 import { Layout, Tabs, Tag, Title } from "../../components";
 import ReportRequests from "./requests";
 import ReportAlerts from "./alerts";
+import ReportIncidents from "./incidents";
 
 type ParamTypes = {
   orgName: string;
@@ -45,7 +46,11 @@ export default function Index(): JSX.Element {
       title: "Alerts",
       content: <ReportAlerts probeID={probeID} />,
     },
-    { key: "incidents", title: "Incidents", content: "Incidents" },
+    {
+      key: "incidents",
+      title: "Incidents",
+      content: <ReportIncidents probeID={probeID} />,
+    },
     { key: "recoveries", title: "Recoveries", content: "Recoveries" },
   ];
 
