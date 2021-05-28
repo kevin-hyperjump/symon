@@ -29,7 +29,7 @@ interface ReportIncidentsProps {
 export default function ReportIncidents({
   probeID,
 }: ReportIncidentsProps): JSX.Element {
-  const limit = 10;
+  const limit = 30;
 
   const fetchReportIncidents = ({ pageParam = "" }) =>
     fetcher(
