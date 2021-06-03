@@ -45,7 +45,11 @@ export async function findMany(
       order: req.query.order ?? "asc",
     });
 
-    res.status(200).send(data);
+    res.status(200).send({
+      result: "SUCCESS",
+      message: "Successfully get list of organizations",
+      data,
+    });
   } catch (err) {
     const error = new AppError(
       commonHTTPErrors.unprocessableEntity,
@@ -79,7 +83,11 @@ export async function findOneByID(
       return;
     }
 
-    res.status(200).send(data);
+    res.status(200).send({
+      result: "SUCCESS",
+      message: "Successfully get organization",
+      data,
+    });
   } catch (err) {
     const error = new AppError(
       commonHTTPErrors.unprocessableEntity,
@@ -101,7 +109,11 @@ export async function create(
 
     const data = await repository.create({ name, description });
 
-    res.status(201).send({ id: data.id });
+    res.status(201).send({
+      result: "SUCCESS",
+      message: "Successfully create organization",
+      data,
+    });
   } catch (err) {
     const error = new AppError(
       commonHTTPErrors.unprocessableEntity,
@@ -122,9 +134,13 @@ export async function update(
   const { name, description } = req.body;
 
   try {
-    await repository.update(id, { name, description });
+    const data = await repository.update(id, { name, description });
 
-    res.status(200).send({ id });
+    res.status(200).send({
+      result: "SUCCESS",
+      message: "Successfully update organization",
+      data,
+    });
   } catch (err) {
     const error = new AppError(
       commonHTTPErrors.unprocessableEntity,
@@ -146,7 +162,10 @@ export async function destroy(
   try {
     await repository.destroy(id);
 
-    res.status(200).send({ message: "Successful" });
+    res.status(200).send({
+      result: "SUCCESS",
+      message: "Successfully delete organization",
+    });
   } catch (err) {
     const error = new AppError(
       commonHTTPErrors.unprocessableEntity,

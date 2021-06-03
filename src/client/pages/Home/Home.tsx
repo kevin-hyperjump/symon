@@ -25,33 +25,54 @@ import { fetcher } from "../../data/requests";
 
 export const Home: FC = () => {
   const history = useHistory();
-  const { data: organizations } = useQuery("getOrganizations", () =>
-    fetcher(`/organizations`, {
-      method: "GET",
-    }),
+
+  const { isLoading: isLoadingOrganizations, data: organizations } = useQuery(
+    "getOrganizations",
+    () => {
+      return fetcher(`/organizations`, {
+        method: "GET",
+      });
+    },
   );
 
-  const { data: projects } = useQuery("getProjects", () =>
-    fetcher(`/projects`, {
-      method: "GET",
-    }),
+  const { isLoading: isLoadingProjects, data: projects } = useQuery(
+    "getProjects",
+    () => {
+      return fetcher(`/projects`, {
+        method: "GET",
+      });
+    },
   );
 
-  const { data: probes } = useQuery("getProbes", () =>
-    fetcher(`/probes`, {
-      method: "GET",
-    }),
+  const { isLoading: isLoadingProbes, data: probes } = useQuery(
+    "getProbes",
+    () => {
+      return fetcher(`/probes`, {
+        method: "GET",
+      });
+    },
   );
-
-  const orgName = organizations && organizations[0]?.name;
-  const projectID = projects?.data[0]?.id;
-  const probeID = probes && probes[0]?.name;
 
   useEffect(() => {
-    if (orgName && probeID && projectID) {
+    const isNotLoading =
+      !isLoadingOrganizations && !isLoadingProjects && !isLoadingProbes;
+
+    if (isNotLoading) {
+      const orgName = organizations?.data[0]?.name;
+      const projectID = projects?.data[0]?.id;
+      const probeID = probes?.data[0]?.id;
+
       history.push(`/${orgName}/${projectID}/${probeID}/report`);
     }
-  }, [history, orgName, probeID, projectID]);
+  }, [
+    history,
+    organizations,
+    projects,
+    probes,
+    isLoadingOrganizations,
+    isLoadingProjects,
+    isLoadingProbes,
+  ]);
 
   return (
     <Layout>

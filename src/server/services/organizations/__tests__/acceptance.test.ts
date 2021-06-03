@@ -17,7 +17,6 @@
  *                                                                                *
  **********************************************************************************/
 
-import bodyParser from "body-parser";
 import express from "express";
 import faker from "faker";
 import request from "supertest";
@@ -42,7 +41,7 @@ let organizations: Organization[] = [
 describe("Organization Service", () => {
   const app = express();
 
-  app.use(bodyParser.json());
+  app.use(express.json());
   app.use(organization);
   app.use(errorHandler());
 
@@ -103,7 +102,11 @@ describe("Organization Service", () => {
       const res = await request(app).get("/v1/organizations");
 
       expect(res.status).toBe(200);
-      expect(res.body.length).toBe(1);
+      expect(res.body).toStrictEqual({
+        result: "SUCCESS",
+        message: "Successfully get list of organizations",
+        data: organizations,
+      });
       done();
     });
 
@@ -126,7 +129,11 @@ describe("Organization Service", () => {
       const res = await request(app).get("/v1/organizations/1");
 
       expect(res.status).toBe(200);
-      expect(res.body.id).toBe(1);
+      expect(res.body).toStrictEqual({
+        result: "SUCCESS",
+        message: "Successfully get organization",
+        data: organizations[0],
+      });
       done();
     });
 
@@ -150,14 +157,23 @@ describe("Organization Service", () => {
   });
 
   describe("POST /v1/organizations", () => {
+    const mockData = {
+      name: faker.company.companyName(),
+      description: faker.lorem.words(),
+    };
+
     it("should return http status code 201", async done => {
-      const res = await request(app).post("/v1/organizations").send({
-        name: faker.company.companyName(),
-        description: faker.lorem.words(),
-      });
+      const res = await request(app).post("/v1/organizations").send(mockData);
 
       expect(res.status).toBe(201);
-      expect(organizations.length).toBe(2);
+      expect(res.body).toStrictEqual({
+        result: "SUCCESS",
+        message: "Successfully create organization",
+        data: {
+          ...mockData,
+          id: 2,
+        },
+      });
       done();
     });
 
@@ -187,13 +203,17 @@ describe("Organization Service", () => {
 
   describe("PUT /v1/organizations/:id", () => {
     it("should return http status code 200", async done => {
-      const res = await request(app).put("/v1/organizations/2").send({
+      const res = await request(app).put("/v1/organizations/1").send({
         name: faker.company.companyName(),
         description: faker.lorem.words(),
       });
 
       expect(res.status).toBe(200);
-      expect(organizations.length).toBe(2);
+      expect(res.body).toStrictEqual({
+        result: "SUCCESS",
+        message: "Successfully update organization",
+        data: res.body.data,
+      });
       done();
     });
 
@@ -228,7 +248,10 @@ describe("Organization Service", () => {
       const res = await request(app).delete("/v1/organizations/2");
 
       expect(res.status).toBe(200);
-      expect(organizations.length).toBe(1);
+      expect(res.body).toStrictEqual({
+        result: "SUCCESS",
+        message: "Successfully delete organization",
+      });
       done();
     });
 
