@@ -47,7 +47,6 @@ export async function findMany(
 
     res.status(200).send(data);
   } catch (err) {
-    console.log("ERROR", err);
     const error = new AppError(
       commonHTTPErrors.unprocessableEntity,
       err.message,
