@@ -28,10 +28,16 @@ export interface Endpoint {
 }
 
 export interface SidebarProps {
+  orgName?: string;
+  projectID?: string;
   endpoints?: Endpoint[];
 }
 
-export const Sidebar: FC<SidebarProps> = ({ endpoints }) => {
+export const Sidebar: FC<SidebarProps> = ({
+  orgName,
+  projectID,
+  endpoints,
+}) => {
   return (
     <aside className="relative min-h-screen sm:block sm:w-3/12 xl:w-2/12 p-6 pb-24 bg-bw-dark text-white text-lg">
       <div className="w-28 mt-2 mb-8">
@@ -48,7 +54,10 @@ export const Sidebar: FC<SidebarProps> = ({ endpoints }) => {
       </SidebarGroup>
       <SidebarGroup title="Settings">
         <SidebarGroupItem to="/account" title="Account" />
-        <SidebarGroupItem to="/hyperjump/1/api-keys" title="API Keys" />
+        <SidebarGroupItem
+          to={`/${orgName}/${projectID}/api-keys`}
+          title="API Keys"
+        />
       </SidebarGroup>
     </aside>
   );
