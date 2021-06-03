@@ -28,32 +28,23 @@ export interface Endpoint {
 }
 
 export interface SidebarProps {
+  orgName?: string;
+  projectID?: string;
   endpoints?: Endpoint[];
 }
 
-const exampleEndpoints = [
-  {
-    to: "/1",
-    title: "http://endpoint1.com",
-  },
-  {
-    to: "/2",
-    title: "http://endpoint2.com",
-  },
-  {
-    to: "/3",
-    title: "http://endpoint2.com",
-  },
-];
-
-export const Sidebar: FC<SidebarProps> = ({ endpoints = exampleEndpoints }) => {
+export const Sidebar: FC<SidebarProps> = ({
+  orgName,
+  projectID,
+  endpoints,
+}) => {
   return (
     <aside className="relative min-h-screen sm:block sm:w-3/12 xl:w-2/12 p-6 pb-24 bg-bw-dark text-white text-lg">
       <div className="w-28 mt-2 mb-8">
         <Logo transparent />
       </div>
       <SidebarGroup title="Probes">
-        {endpoints.map(endpoint => (
+        {endpoints?.map(endpoint => (
           <SidebarGroupItem
             key={endpoint.to}
             to={endpoint.to}
@@ -63,7 +54,10 @@ export const Sidebar: FC<SidebarProps> = ({ endpoints = exampleEndpoints }) => {
       </SidebarGroup>
       <SidebarGroup title="Settings">
         <SidebarGroupItem to="/account" title="Account" />
-        <SidebarGroupItem to="/api-keys" title="API Keys" />
+        <SidebarGroupItem
+          to={`/${orgName}/${projectID}/api-keys`}
+          title="API Keys"
+        />
       </SidebarGroup>
     </aside>
   );
