@@ -31,6 +31,7 @@ const router = express.Router();
 
 router.post(
   "/v1/monika/handshake",
+  apiKeyMiddleware,
   validate(createHandshakeSchemaValidator),
   createHandshake,
 );
