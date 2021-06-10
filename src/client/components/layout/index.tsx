@@ -60,8 +60,10 @@ export default function Layout({
       orgName={orgName}
       projectID={projectID}
       endpoints={(probes?.data ?? []).map((item: reportRequests) => {
+        const encodedProbeID = encodeURIComponent(item.probeId);
+
         return {
-          to: `/${orgName}/${projectID}/${item.probeId}/report`,
+          to: `/${orgName}/${projectID}/${encodedProbeID}/report`,
           title: item.probeName || item.probeId,
         };
       })}

@@ -35,27 +35,28 @@ export type ParamTypes = {
 export default function Index(): JSX.Element {
   const history = useHistory();
   const { orgName, projectID, probeID, category } = useParams<ParamTypes>();
+  const decodedProbeID = decodeURIComponent(probeID);
 
   const tabPanes = [
     {
       key: "requests",
       title: "Requests",
-      content: <ReportRequests probeID={probeID} />,
+      content: <ReportRequests probeID={decodedProbeID} />,
     },
     {
       key: "alerts",
       title: "Alerts",
-      content: <ReportAlerts probeID={probeID} />,
+      content: <ReportAlerts probeID={decodedProbeID} />,
     },
     {
       key: "incidents",
       title: "Incidents",
-      content: <ReportIncidents probeID={probeID} />,
+      content: <ReportIncidents probeID={decodedProbeID} />,
     },
     {
       key: "recoveries",
       title: "Recoveries",
-      content: <ReportRecoveries probeID={probeID} />,
+      content: <ReportRecoveries probeID={decodedProbeID} />,
     },
   ];
 
