@@ -20,6 +20,7 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { cfg } from "../config";
 import { getSavedTokens } from "./user";
+import { logout } from "../utils/auth";
 import Storage from "../utils/storage";
 
 const apiURL = cfg.apiUrl;
@@ -56,9 +57,7 @@ axiosWithTokenInstance.interceptors.response.use(
         return axiosWithTokenInstance(originalRequest);
       } catch (error) {
         // remove access token, refresh token and reload when refresh token is expired
-        storage.del("at");
-        storage.del("rt");
-        window.location.reload();
+        logout();
       }
     }
 
