@@ -38,14 +38,18 @@ export const Login: FC = () => {
     password: "",
     remember: false,
   });
+
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   const { mutate: login, isLoading } = useLogin();
 
-  const { data: checkUserData } = useQuery("checkUsers", () =>
-    fetcher(`/auth/check-users`, {
-      method: "GET",
-    }),
+  const { data: checkUserData, isLoading: isPageLoading } = useQuery(
+    "checkUsers",
+    () => {
+      return fetcher(`/auth/check-users`, {
+        method: "GET",
+      });
+    },
   );
 
   useEffect(() => {
@@ -91,6 +95,10 @@ export const Login: FC = () => {
       setErrorMessage(error?.message);
     }
   };
+
+  if (isPageLoading) {
+    return <div />;
+  }
 
   return (
     <LoginView
