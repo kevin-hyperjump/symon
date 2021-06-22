@@ -18,11 +18,9 @@
  **********************************************************************************/
 
 import argon2 from "argon2";
-
 import { user } from "@prisma/client";
-
 import Prisma from "../../prisma/prisma-client";
-import { UserCreate, UserUpdate } from "./entity";
+import { UserCreate, UserUpdate, UserUpsert } from "./entity";
 
 type UserResponse = Omit<user, "password_hash">;
 
@@ -109,6 +107,24 @@ export class UserRepository {
     await Prisma.user.delete({ where: { id } });
 
     return id;
+  }
+
+  async upsert({
+    where,
+    update,
+    create,
+  }: {
+    where: Record<string, unknown>;
+    update: Record<string, unknown>;
+    create: UserUpsert;
+  }): Promise<UserResponse> {
+    const data = await Prisma.user.upsert({
+      where,
+      update,
+      create,
+    });
+
+    return data;
   }
 
   async generatePasswordHash(plainTextPassword: string): Promise<string> {

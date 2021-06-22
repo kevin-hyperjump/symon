@@ -67,4 +67,22 @@ export class ConfigRepository {
 
     return key;
   }
+
+  async upsert({
+    where,
+    update,
+    create,
+  }: {
+    where: Record<string, unknown>;
+    update: Record<string, unknown>;
+    create: Config;
+  }): Promise<Config> {
+    const data = await Prisma.config.upsert({
+      where,
+      update,
+      create,
+    });
+
+    return data;
+  }
 }

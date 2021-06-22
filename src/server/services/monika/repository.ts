@@ -140,4 +140,14 @@ export class MonikaRepository {
   findOneByInstanceID(id: string): Promise<monika | null> {
     return Prisma.monika.findFirst({ where: { instanceId: id } });
   }
+
+  async create(res: MonikaHandshakeCreate): Promise<monika> {
+    const data = await Prisma.monika.create({
+      data: {
+        ...res,
+      },
+    });
+
+    return data;
+  }
 }

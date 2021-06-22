@@ -17,14 +17,31 @@
  *                                                                                *
  **********************************************************************************/
 
-import { user } from "@prisma/client";
+import { reportRequestAlerts, reportNotifications } from "@prisma/client";
 
-export type UserCreate = Omit<user, "id" | "password_hash"> & {
-  password: string;
-};
+import Prisma from "../../prisma/prisma-client";
+import { ReportRequestAlertCreate, ReportNotificationCreate } from "./entity";
 
-export type UserUpdate = {
-  password: string;
-};
+export class ReportRequestAlertRepository {
+  async create(res: ReportRequestAlertCreate): Promise<reportRequestAlerts> {
+    const data = await Prisma.reportRequestAlerts.create({
+      data: {
+        ...res,
+      },
+    });
 
-export type UserUpsert = Omit<user, "id">;
+    return data;
+  }
+}
+
+export class ReportNotificationRepository {
+  async create(res: ReportNotificationCreate): Promise<reportNotifications> {
+    const data = await Prisma.reportNotifications.create({
+      data: {
+        ...res,
+      },
+    });
+
+    return data;
+  }
+}

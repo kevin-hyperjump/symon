@@ -17,14 +17,8 @@
  *                                                                                *
  **********************************************************************************/
 
-import { user } from "@prisma/client";
+import { reportRequestAlerts, reportNotifications } from "@prisma/client";
 
-export type UserCreate = Omit<user, "id" | "password_hash"> & {
-  password: string;
-};
+export type ReportRequestAlertCreate = Omit<reportRequestAlerts, "id">;
 
-export type UserUpdate = {
-  password: string;
-};
-
-export type UserUpsert = Omit<user, "id">;
+export type ReportNotificationCreate = Omit<reportNotifications, "id">;

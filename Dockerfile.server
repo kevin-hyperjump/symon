@@ -53,8 +53,7 @@ COPY src/server src/server
 RUN npm ci --also=dev
 
 # Migrate and seed
-RUN npm run migrate
-RUN npm run seed
+RUN npx prisma migrate deploy
 
 # Build the server
 RUN npm run server:build

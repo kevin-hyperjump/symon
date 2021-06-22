@@ -27,6 +27,7 @@ import { setupPassport } from "../../config/passport";
 import { AppError, commonHTTPErrors } from "../../internal/app-error";
 import { verify } from "../../internal/password-hash";
 import { UserRepository } from "../users/repository";
+import seed from "../../internal/seeder";
 
 const JWT_SECRET = cfg.jwtSecret;
 const JWT_ISSUER = cfg.jwtIssuer;
@@ -54,11 +55,23 @@ export async function checkHasUser(
   try {
     const data = await repo.findMany({ offset: 0, size: 10, order: "asc" });
 
-    res.status(200).send({
-      result: "SUCCESS",
-      message: "Successfully get users",
-      hasUser: data.length > 0 ? true : false,
-    });
+    // Check if there is a user
+    if (data.length < 1) {
+      // Run seeder
+      await seed();
+
+      res.status(200).send({
+        result: "SUCCESS",
+        message: "Successfully seeded users",
+        hasUser: true,
+      });
+    } else {
+      res.status(200).send({
+        result: "SUCCESS",
+        message: "Successfully get users",
+        hasUser: true,
+      });
+    }
   } catch (err) {
     const error = new AppError(
       commonHTTPErrors.unprocessableEntity,
