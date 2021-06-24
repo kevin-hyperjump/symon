@@ -36,35 +36,36 @@ const axiosBaseInstance = axios.create(baseConfig);
 const axiosWithTokenInstance = axios.create(baseConfig);
 
 // Response interceptor for API calls
-axiosWithTokenInstance.interceptors.response.use(
-  response => response,
-  async error => {
-    const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
-      const storage = new Storage();
-      originalRequest._retry = true;
+axiosWithTokenInstance.interceptors.response.use(async response => {
+  const originalRequest = response.config as AxiosRequestConfig & {
+    _retry?: boolean;
+  };
 
-      // refresh access token
-      const refreshToken = storage.get("rt");
-      try {
-        const resp = await refreshAccessToken(refreshToken ?? "");
-        const accessToken = resp?.data?.data?.accessToken;
+  if (response.status === 401 && !originalRequest._retry) {
+    const storage = new Storage();
+    originalRequest._retry = true;
 
-        // store access token
-        storage.set("at", accessToken);
-        // change token in header
-        originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
+    // refresh access token
+    const refreshToken = storage.get("rt");
 
-        return axiosWithTokenInstance(originalRequest);
-      } catch (error) {
-        // remove access token, refresh token and reload when refresh token is expired
-        logout();
-      }
+    try {
+      const resp = await refreshAccessToken(refreshToken ?? "");
+      const accessToken = resp?.data?.data?.accessToken;
+
+      // store access token
+      storage.set("at", accessToken);
+      // change token in header
+      originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
+
+      return axiosWithTokenInstance(originalRequest);
+    } catch (error) {
+      // remove access token, refresh token and reload when refresh token is expired
+      logout();
     }
+  }
 
-    return Promise.reject(error);
-  },
-);
+  return response;
+});
 
 async function refreshAccessToken(refreshToken: string) {
   const config = {
@@ -100,7 +101,9 @@ export const fetcher = async (
     },
     data: body ? JSON.stringify(body) : null,
   };
+
   const response = await axiosWithTokenInstance(config);
+
   if (response.status >= 300) {
     throw new Error(response?.data?.message);
   }
