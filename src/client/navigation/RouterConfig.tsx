@@ -17,18 +17,19 @@
  *                                                                                *
  **********************************************************************************/
 
-import { Route, Switch, Redirect } from "react-router-dom";
+import { Redirect, Route, Switch } from "react-router-dom";
 
 import Account from "../pages/account";
 import APIKey from "../pages/api-keys";
 import APIKeyByID from "../pages/api-keys/[id]";
 import APIKeyCreate from "../pages/api-keys/create";
 import Home from "../pages/Home";
-import Login from "../pages/Login";
+import Login from "../pages/login";
 import Organization from "../pages/Organization";
-import Report from "../pages/report";
 import Project from "../pages/Project";
+import Report from "../pages/report";
 import Setup from "../pages/Setup";
+import CreateNewUser from "../pages/user/new";
 import ProtectedRoute from "./ProtectedRoute";
 
 export const RouterConfig = (): JSX.Element => {
@@ -36,6 +37,7 @@ export const RouterConfig = (): JSX.Element => {
     <Switch>
       <Route path="/setup" component={Setup} />
       <Route path="/login" component={Login} />
+      <Route path="/users/new" component={CreateNewUser} />
       <ProtectedRoute path="/account" component={Account} />
       <ProtectedRoute
         path="/:orgName/:projectID/api-keys"
