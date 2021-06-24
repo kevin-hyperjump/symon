@@ -103,7 +103,6 @@ export const fetcher = async (
   };
 
   const response = await axiosWithTokenInstance(config);
-  console.log("response", response);
 
   if (response.status >= 300) {
     throw new Error(response?.data?.message);
