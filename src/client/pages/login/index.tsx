@@ -17,7 +17,13 @@
  *                                                                                *
  **********************************************************************************/
 
-import { FormEvent, FunctionComponent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  FunctionComponent,
+  useEffect,
+  useState,
+} from "react";
 import { useQuery } from "react-query";
 import { useHistory } from "react-router-dom";
 
@@ -37,6 +43,7 @@ const Login: FunctionComponent = () => {
   const [data, setData] = useState({
     email: "",
     password: "",
+    remember: false,
   });
 
   const { mutate: login, isLoading: loading } = useLogin();
@@ -49,6 +56,18 @@ const Login: FunctionComponent = () => {
       });
     },
   );
+
+  useEffect(() => {
+    const rememberMeStoredValue = storage.get("rememberMe");
+    const remember = rememberMeStoredValue === "true" ? true : false;
+    const accessToken = storage.get("at");
+
+    if (remember && !!accessToken) {
+      history.replace("/");
+    } else {
+      setData(prev => ({ ...prev, remember }));
+    }
+  }, [history]);
 
   useEffect(() => {
     if (!checkUserData?.hasUser && !checkUserLoading) {
@@ -88,6 +107,12 @@ const Login: FunctionComponent = () => {
     setErrorMessage("");
 
     setData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleChangeRememberMe = (e: ChangeEvent<HTMLInputElement>) => {
+    const targetChecked = e.target.checked;
+    storage.set("rememberMe", targetChecked);
+    handleChangeValue("remember", targetChecked);
   };
 
   return (
@@ -133,6 +158,21 @@ const Login: FunctionComponent = () => {
                   onChange={e => handleChangeValue("password", e.target.value)}
                   required
                 />
+              </div>
+            </div>
+            <div className="flex items-center justify-between ml-24 font-light text-gray-500 mb-8">
+              <div className="flex items-center">
+                <input
+                  id="remember"
+                  name="remember"
+                  type="checkbox"
+                  className="h-4 w-4 focus:ring-transparent text-bw border-gray-300 rounded"
+                  checked={data.remember}
+                  onChange={handleChangeRememberMe}
+                />
+                <label htmlFor="remember" className="ml-2 block text-sm">
+                  Remember me
+                </label>
               </div>
             </div>
             <div className="ml-24">

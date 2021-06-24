@@ -17,16 +17,13 @@
  *                                                                                *
  **********************************************************************************/
 
-import { FormEvent, FunctionComponent, useEffect, useState } from "react";
+import { FormEvent, FunctionComponent, useState } from "react";
 import { useHistory } from "react-router-dom";
 
 import Button from "../../components/Button";
 import Header from "../../components/Header";
 import Input from "../../components/Input";
 import { fetcher } from "../../data/requests";
-import Storage from "../../utils/storage";
-
-const storage = new Storage();
 
 const CreateNewUser: FunctionComponent = () => {
   const history = useHistory();
@@ -36,23 +33,7 @@ const CreateNewUser: FunctionComponent = () => {
   const [data, setData] = useState({
     email: "",
     password: "",
-    remember: false,
   });
-
-  useEffect(() => {
-    const rememberMeStoredValue = storage.get("rememberMe");
-    const remember = rememberMeStoredValue === "true" ? true : false;
-    const accessToken = storage.get("at");
-
-    if (remember && !!accessToken) {
-      history.replace("/");
-    } else {
-      setData(prev => ({
-        ...prev,
-        remember,
-      }));
-    }
-  }, [history]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -125,25 +106,6 @@ const CreateNewUser: FunctionComponent = () => {
                   onChange={e => handleChangeValue("password", e.target.value)}
                   required
                 />
-              </div>
-            </div>
-            <div className="flex items-center justify-between ml-24 font-light text-gray-500 mb-8">
-              <div className="flex items-center">
-                <input
-                  id="remember"
-                  name="remember"
-                  type="checkbox"
-                  className="h-4 w-4 focus:ring-transparent text-bw border-gray-300 rounded"
-                  checked={data.remember}
-                  onChange={e => {
-                    const isChecked = e.target.checked ? "true" : "false";
-                    storage.set("rememberMe", isChecked);
-                    handleChangeValue("remember", !!isChecked);
-                  }}
-                />
-                <label htmlFor="remember" className="ml-2 block text-sm">
-                  Remember me
-                </label>
               </div>
             </div>
             <div className="ml-24">
