@@ -35,7 +35,7 @@ jobs:
             --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} \
             --build-arg REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }} \
             --build-arg REACT_APP_API_PREFIX=${{ secrets.REACT_APP_API_PREFIX }} \
-            --build-arg REACT_APP_GIT_HASH=$(git rev-parse --short HEAD)
+            --build-arg REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) \
             -f Dockerfile.client . -t dokku/frontend:$(git rev-parse --short HEAD)
       - name: Build Server Image with Docker
         run: |
