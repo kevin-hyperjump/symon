@@ -89,7 +89,7 @@ export default function Requests({ probeID }: requestProps): JSX.Element {
       {status === "error" ? (
         <Alert
           message="Error"
-          description="Failed to get API Key data"
+          description="Failed to get requests data"
           type="error"
         />
       ) : (

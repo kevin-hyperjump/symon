@@ -82,7 +82,7 @@ export default function ReportIncidents({
       {status === "error" ? (
         <Alert
           message="Error"
-          description="Failed to get API Key data"
+          description="Failed to get incidents data"
           type="error"
         />
       ) : (
