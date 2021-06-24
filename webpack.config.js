@@ -47,10 +47,17 @@ dotenvFiles.forEach(dotenvFile => {
 const env = getClientEnvironment();
 
 // Get current commit hash to be appended to index.html
-const commitHash = require("child_process")
-  .execSync("git rev-parse --short HEAD")
-  .toString()
-  .trim();
+const getCommitHash = () => {
+  try {
+    let hash = require("child_process")
+      .execSync("git rev-parse --short HEAD")
+      .toString()
+      .trim();
+    return hash;
+  } catch (e) {
+    return env.raw["REACT_APP_GIT_HASH"];
+  }
+};
 
 module.exports = {
   mode: isEnvProduction ? "production" : isEnvDevelopment && "development",
@@ -93,7 +100,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "./src/client/index.html",
       templateParameters: {
-        __COMMIT_HASH__: commitHash,
+        __COMMIT_HASH__: getCommitHash(),
       },
     }),
     new MiniCssExtractPlugin({
