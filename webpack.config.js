@@ -46,6 +46,12 @@ dotenvFiles.forEach(dotenvFile => {
 
 const env = getClientEnvironment();
 
+// Get current commit hash to be appended to index.html
+const commitHash = require("child_process")
+  .execSync("git rev-parse --short HEAD")
+  .toString()
+  .trim();
+
 module.exports = {
   mode: isEnvProduction ? "production" : isEnvDevelopment && "development",
   devtool: isEnvProduction ? "source-map" : "inline-source-map",
@@ -86,6 +92,9 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: "./src/client/index.html",
+      templateParameters: {
+        __COMMIT_HASH__: commitHash,
+      },
     }),
     new MiniCssExtractPlugin({
       filename: "static/css/[name].[contenthash:8].css",

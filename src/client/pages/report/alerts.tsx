@@ -106,7 +106,7 @@ export default function ReportAlerts({
       {status === "error" ? (
         <Alert
           message="Error"
-          description="Failed to get API Key data"
+          description="Failed to get alerts data"
           type="error"
         />
       ) : (

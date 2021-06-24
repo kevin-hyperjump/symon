@@ -82,7 +82,7 @@ export default function ReportRecoveries({
       {status === "error" ? (
         <Alert
           message="Error"
-          description="Failed to get API Key data"
+          description="Failed to get recoveries data"
           type="error"
         />
       ) : (
