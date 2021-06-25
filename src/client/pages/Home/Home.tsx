@@ -56,8 +56,7 @@ export const Home: FC = () => {
   useEffect(() => {
     const isNotLoading =
       !isLoadingOrganizations && !isLoadingProjects && !isLoadingProbes;
-
-    if (isNotLoading) {
+    if (isNotLoading && probes?.data?.length > 0) {
       const orgName = organizations?.data[0]?.name;
       const projectID = projects?.data[0]?.id;
       const probeID = probes?.data[0]?.probeId;
@@ -76,7 +75,18 @@ export const Home: FC = () => {
 
   return (
     <Layout>
-      <div>Home</div>
+      <strong>You don&apos;t have any probes yet.</strong>
+      <p className="mt-8">
+        Run Monika with Symon configuration to see the probes here. Please check
+        out{" "}
+        <a
+          href="https://monika.hyperjump.tech/quick-start"
+          className="underline"
+        >
+          documentation
+        </a>
+        .
+      </p>
     </Layout>
   );
 };
