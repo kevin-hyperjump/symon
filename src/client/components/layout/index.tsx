@@ -80,14 +80,14 @@ function Content({
   endpoints,
 }: LayoutProps): JSX.Element {
   return (
-    <main className="flex items-start justify-between overflow-hidden">
+    <div className="flex items-start justify-between">
       <Sidebar orgName={orgName} projectID={projectID} endpoints={endpoints} />
-      <div className="pl-64 w-full">
+      <main className="pl-64 w-full">
         <Header />
-        <div className="container mx-auto px-4 py-5 sm:px-6 lg:px-7">
+        <div className="container-content container mx-auto px-4 py-5 sm:px-6 lg:px-7">
           {children}
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

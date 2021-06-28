@@ -40,7 +40,7 @@ export const Sidebar: FC<SidebarProps> = ({
   endpoints,
 }) => {
   return (
-    <aside className="fixed min-h-screen w-64 p-6 pb-24 bg-bw-dark text-white text-lg">
+    <aside className="fixed min-h-screen max-h-screen overflow-y-auto w-64 p-6 pb-24 bg-bw-dark text-white text-lg">
       <div className="w-28 mt-2 mb-8">
         <Link to="/">
           <Logo transparent />
