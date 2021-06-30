@@ -84,7 +84,7 @@ function Content({
       <Sidebar orgName={orgName} projectID={projectID} endpoints={endpoints} />
       <main className="pl-64 w-full">
         <Header />
-        <div className="container-content container mx-auto px-4 py-5 sm:px-6 lg:px-7">
+        <div className="container mx-auto px-4 py-5 sm:px-6 lg:px-7">
           {children}
         </div>
       </main>
